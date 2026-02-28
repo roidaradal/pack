@@ -7,7 +7,7 @@ type Boolean bool
 // ToInt converts a Boolean to Int (true = 1, false = 0)
 func (b Boolean) ToInt() Int {
 	if b {
-		return Int(1)
+		return 1
 	}
-	return Int(0)
+	return 0
 }
