@@ -1,3 +1,4 @@
 v0.1.0 - Data Types
     - Commit:
     x ds.Int, Uint, Float
+    x ds.String, Boolean
