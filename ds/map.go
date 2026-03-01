@@ -15,17 +15,17 @@ type Entry[K comparable, V any] struct {
 }
 
 // Len returns the Map size
-func (m Map[K, V]) Len() Int {
-	return Int(len(m))
+func (m Map[K, V]) Len() int {
+	return len(m)
 }
 
 // IsEmpty checks if the Map is empty
-func (m Map[K, V]) IsEmpty() Boolean {
+func (m Map[K, V]) IsEmpty() bool {
 	return len(m) == 0
 }
 
 // NotEmpty checks if the Map is not empty
-func (m Map[K, V]) NotEmpty() Boolean {
+func (m Map[K, V]) NotEmpty() bool {
 	return len(m) > 0
 }
 

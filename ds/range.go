@@ -22,8 +22,8 @@ func (r *Range[T]) ToList() List[T] {
 }
 
 // Len returns the size of the Range
-func (r *Range[T]) Len() Int {
-	return Int(r.End - r.Start)
+func (r *Range[T]) Len() int {
+	return int(r.End - r.Start)
 }
 
 // Copy creates a new Range copy
@@ -32,7 +32,7 @@ func (r *Range[T]) Copy() *Range[T] {
 }
 
 // Has checks if number is included in the Range
-func (r *Range[T]) Has(number T) Boolean {
+func (r *Range[T]) Has(number T) bool {
 	return r.Start <= number && number < r.End
 }
 

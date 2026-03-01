@@ -2,51 +2,41 @@ package list
 
 import (
 	"cmp"
-	"slices"
-
-	"github.com/roidaradal/pack/ds"
 )
 
 // AllGreater checks if all List items are greater than given value
-func AllGreater[T cmp.Ordered](items ds.List[T], value T) ds.Boolean {
-	return items.All(func(x T) ds.Boolean {
+func AllGreater[L ~[]T, T cmp.Ordered](items L, value T) bool {
+	return All(items, func(x T) bool {
 		return x > value
 	})
 }
 
 // AllGreaterEqual checks if all List items are greater or equal to given value
-func AllGreaterEqual[T cmp.Ordered](items ds.List[T], value T) ds.Boolean {
-	return items.All(func(x T) ds.Boolean {
+func AllGreaterEqual[L ~[]T, T cmp.Ordered](items L, value T) bool {
+	return All(items, func(x T) bool {
 		return x >= value
 	})
 }
 
 // AllLess checks if all List items are lesser than given value
-func AllLess[T cmp.Ordered](items ds.List[T], value T) ds.Boolean {
-	return items.All(func(x T) ds.Boolean {
+func AllLess[L ~[]T, T cmp.Ordered](items L, value T) bool {
+	return All(items, func(x T) bool {
 		return x < value
 	})
 }
 
 // AllLessEqual checks if all List items are lesser or equal to given value
-func AllLessEqual[T cmp.Ordered](items ds.List[T], value T) ds.Boolean {
-	return items.All(func(x T) ds.Boolean {
+func AllLessEqual[L ~[]T, T cmp.Ordered](items L, value T) bool {
+	return All(items, func(x T) bool {
 		return x <= value
 	})
 }
 
-// Min finds the minimum item of the List
-func Min[T cmp.Ordered](items ds.List[T]) T {
-	return slices.Min(items)
-}
-
-// Max finds the maximum item of the List
-func Max[T cmp.Ordered](items ds.List[T]) T {
-	return slices.Max(items)
-}
-
 // ArgMin finds the index of the minimum item of the List
-func ArgMin[T cmp.Ordered](items ds.List[T]) int {
+func ArgMin[L ~[]T, T cmp.Ordered](items L) int {
+	if len(items) == 0 {
+		panic("empty list")
+	}
 	index, currMin := 0, items[0]
 	for i := 1; i < len(items); i++ {
 		if items[i] < currMin {
@@ -57,7 +47,10 @@ func ArgMin[T cmp.Ordered](items ds.List[T]) int {
 }
 
 // ArgMax finds the index of the maximum item of the List
-func ArgMax[T cmp.Ordered](items ds.List[T]) int {
+func ArgMax[L ~[]T, T cmp.Ordered](items L) int {
+	if len(items) == 0 {
+		panic("empty list")
+	}
 	index, currMax := 0, items[0]
 	for i := 1; i < len(items); i++ {
 		if items[i] > currMax {
