@@ -1,2 +1,11 @@
 v0.1.0 - Data Types
     - Commit:
+    x ds.List, Map, Set
+    x ds.Range
+    x List methods
+    x Map methods
+    x Set methods
+    x Conv package
+    x Transfer methods to list package
+    x Transfer methods to dict package
+    x String functions
