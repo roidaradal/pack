@@ -10,7 +10,7 @@ func NewEmptySet[T comparable]() *Set[T] {
 }
 
 // NewSetFrom creates a new set from given items
-func NewSetFrom[T comparable](items List[T]) *Set[T] {
+func NewSetFrom[T comparable](items []T) *Set[T] {
 	set := NewEmptySet[T]()
 	set.AddItems(items)
 	return set
@@ -37,7 +37,7 @@ func (s *Set[T]) Copy() *Set[T] {
 }
 
 // Items returns the Set items, in arbitrary order
-func (s *Set[T]) Items() List[T] {
+func (s *Set[T]) Items() []T {
 	return s.items.Keys()
 }
 
@@ -47,7 +47,7 @@ func (s *Set[T]) Add(item T) {
 }
 
 // AddItems adds items to the set
-func (s *Set[T]) AddItems(items List[T]) {
+func (s *Set[T]) AddItems(items []T) {
 	for _, item := range items {
 		s.Add(item)
 	}

@@ -15,7 +15,7 @@ type (
 )
 
 // NewCounter creates a new counter, with each item initialized to count = 0
-func NewCounter[L ~[]T, T comparable](items L) Counter[T] {
+func NewCounter[T comparable](items []T) Counter[T] {
 	count := make(Counter[T], len(items))
 	for _, item := range items {
 		count[item] = 0
@@ -24,7 +24,7 @@ func NewCounter[L ~[]T, T comparable](items L) Counter[T] {
 }
 
 // CounterFunc creates a counter, using the keys produced from keyFn
-func CounterFunc[L ~[]T, T any, K comparable](items L, keyFn func(T) K) Counter[K] {
+func CounterFunc[T any, K comparable](items []T, keyFn func(T) K) Counter[K] {
 	count := make(Counter[K], len(items))
 	for _, item := range items {
 		count[keyFn(item)] += 1
@@ -33,14 +33,14 @@ func CounterFunc[L ~[]T, T any, K comparable](items L, keyFn func(T) K) Counter[
 }
 
 // UpdateCounter updates the counter in place with incoming items
-func UpdateCounter[L ~[]T, T comparable](counter Counter[T], items L) {
+func UpdateCounter[T comparable](counter Counter[T], items []T) {
 	for _, item := range items {
 		counter[item] += 1
 	}
 }
 
 // NewFlags creates a new flags map, with each item initialized to given flag
-func NewFlags[L ~[]T, T comparable](items L, flag bool) Flags[T] {
+func NewFlags[T comparable](items []T, flag bool) Flags[T] {
 	flags := make(Flags[T], len(items))
 	for _, item := range items {
 		flags[item] = flag

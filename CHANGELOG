@@ -6,6 +6,6 @@ v0.1.0 - Data Types
     x Map methods
     x Set methods
     x Conv package
-    - Transfer list methods to list package
-    - Transfer map methods to dict package
+    x Transfer methods to list package
+    - Transfer methods to dict package
     - String functions

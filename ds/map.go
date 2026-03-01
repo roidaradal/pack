@@ -42,18 +42,18 @@ func (m Map[K, V]) Copy() Map[K, V] {
 }
 
 // Keys returns the Map keys, in arbitrary order
-func (m Map[K, V]) Keys() List[K] {
+func (m Map[K, V]) Keys() []K {
 	return slices.Collect(maps.Keys(m))
 }
 
 // Values returns the Map values, in arbitrary order
-func (m Map[K, V]) Values() List[V] {
+func (m Map[K, V]) Values() []V {
 	return slices.Collect(maps.Values(m))
 }
 
 // Entries returns the Map entries, in arbitrary order
-func (m Map[K, V]) Entries() List[Entry[K, V]] {
-	entries := NewEmptyList[Entry[K, V]](len(m))
+func (m Map[K, V]) Entries() []Entry[K, V] {
+	entries := make([]Entry[K, V], 0, len(m))
 	for k, v := range m {
 		entries = append(entries, Entry[K, V]{k, v})
 	}

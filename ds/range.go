@@ -1,24 +1,29 @@
 package ds
 
+import (
+	"github.com/roidaradal/pack/list"
+	"github.com/roidaradal/pack/types"
+)
+
 // Range represents a range of Integers from [start, end)
-type Range[T Integer] struct {
+type Range[T types.Integer] struct {
 	Start T
 	End   T
 }
 
 // NewRange creates a new Range from [start, end)
-func NewRange[T Integer](start, end T) *Range[T] {
+func NewRange[T types.Integer](start, end T) *Range[T] {
 	return &Range[T]{start, end}
 }
 
 // NewInclusiveRange creates a new Range from [first, last]
-func NewInclusiveRange[T Integer](first, last T) *Range[T] {
+func NewInclusiveRange[T types.Integer](first, last T) *Range[T] {
 	return &Range[T]{first, last + 1}
 }
 
 // ToList expands the Range into a List of Integers
-func (r *Range[T]) ToList() List[T] {
-	return NewRangeList[T](r.Start, r.End)
+func (r *Range[T]) ToList() []T {
+	return list.Range(r.Start, r.End)
 }
 
 // Len returns the size of the Range

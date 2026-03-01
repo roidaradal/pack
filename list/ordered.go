@@ -5,35 +5,35 @@ import (
 )
 
 // AllGreater checks if all List items are greater than given value
-func AllGreater[L ~[]T, T cmp.Ordered](items L, value T) bool {
+func AllGreater[T cmp.Ordered](items []T, value T) bool {
 	return All(items, func(x T) bool {
 		return x > value
 	})
 }
 
 // AllGreaterEqual checks if all List items are greater or equal to given value
-func AllGreaterEqual[L ~[]T, T cmp.Ordered](items L, value T) bool {
+func AllGreaterEqual[T cmp.Ordered](items []T, value T) bool {
 	return All(items, func(x T) bool {
 		return x >= value
 	})
 }
 
 // AllLess checks if all List items are lesser than given value
-func AllLess[L ~[]T, T cmp.Ordered](items L, value T) bool {
+func AllLess[T cmp.Ordered](items []T, value T) bool {
 	return All(items, func(x T) bool {
 		return x < value
 	})
 }
 
 // AllLessEqual checks if all List items are lesser or equal to given value
-func AllLessEqual[L ~[]T, T cmp.Ordered](items L, value T) bool {
+func AllLessEqual[T cmp.Ordered](items []T, value T) bool {
 	return All(items, func(x T) bool {
 		return x <= value
 	})
 }
 
 // ArgMin finds the index of the minimum item of the List
-func ArgMin[L ~[]T, T cmp.Ordered](items L) int {
+func ArgMin[T cmp.Ordered](items []T) int {
 	if len(items) == 0 {
 		panic("empty list")
 	}
@@ -47,7 +47,7 @@ func ArgMin[L ~[]T, T cmp.Ordered](items L) int {
 }
 
 // ArgMax finds the index of the maximum item of the List
-func ArgMax[L ~[]T, T cmp.Ordered](items L) int {
+func ArgMax[T cmp.Ordered](items []T) int {
 	if len(items) == 0 {
 		panic("empty list")
 	}
