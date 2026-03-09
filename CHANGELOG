@@ -2,7 +2,7 @@ v0.1.2 - Strings and Lang Package
     - Commit:
     x Lang package
     x String functions
-    - String parts functions
+    x String parts functions
     - String builder
     - String colors
 v0.1.1 - Numbers and Conversions
