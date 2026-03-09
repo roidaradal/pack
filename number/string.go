@@ -32,7 +32,7 @@ func CommaDecimalString[F Float](f F, decimalPlaces uint) string {
 	}
 	out := groupDigits(whole, isNegative)
 	if fraction != "" {
-		out += "." + fraction
+		out = out + "." + fraction
 	}
 	return out
 }
