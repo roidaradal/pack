@@ -49,3 +49,15 @@ func TestPair(t *testing.T) {
 		t.Errorf("Pair.Values() = %v, %v, want %v, %v", a, b, v1, v2)
 	}
 }
+
+func TestTriple(t *testing.T) {
+	v1, v2, v3 := 6, 7, 8
+	r := Triple[int]{v1, v2, v3}
+	if r[0] != v1 || r[1] != v2 || r[2] != v3 {
+		t.Errorf("Triple[0,1,2] = %v, %v, %v want %v, %v, %v", r[0], r[1], r[2], v1, v2, v3)
+	}
+	a, b, c := r.Values()
+	if a != v1 || b != v2 || c != v3 {
+		t.Errorf("Triple.Values() = %v, %v, %v want %v, %v, %v", a, b, c, v1, v2, v3)
+	}
+}

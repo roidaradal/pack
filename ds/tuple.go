@@ -24,6 +24,9 @@ type Tuple4[A, B, C, D any] struct {
 // Pair is a tuple with two values of the same type
 type Pair[T any] [2]T
 
+// Triple is a tuple with three values of the same type
+type Triple[T any] [3]T
+
 // NewTuple2 creates a new Tuple2
 func NewTuple2[A, B any](v1 A, v2 B) Tuple2[A, B] {
 	return Tuple2[A, B]{v1, v2}
@@ -57,4 +60,9 @@ func (t Tuple4[A, B, C, D]) Values() (A, B, C, D) {
 // Values returns the unpacked Pair values
 func (p Pair[T]) Values() (T, T) {
 	return p[0], p[1]
+}
+
+// Values returns the unpacked Triple values
+func (t Triple[T]) Values() (T, T, T) {
+	return t[0], t[1], t[2]
 }
