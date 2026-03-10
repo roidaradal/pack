@@ -27,6 +27,9 @@ type Pair[T any] [2]T
 // Triple is a tuple with three values of the same type
 type Triple[T any] [3]T
 
+// Quad is a tuple with four values of the same type
+type Quad[T any] [4]T
+
 // NewTuple2 creates a new Tuple2
 func NewTuple2[A, B any](v1 A, v2 B) Tuple2[A, B] {
 	return Tuple2[A, B]{v1, v2}
@@ -65,4 +68,9 @@ func (p Pair[T]) Values() (T, T) {
 // Values returns the unpacked Triple values
 func (t Triple[T]) Values() (T, T, T) {
 	return t[0], t[1], t[2]
+}
+
+// Values returns the unpacked Quad values
+func (q Quad[T]) Values() (T, T, T, T) {
+	return q[0], q[1], q[2], q[3]
 }

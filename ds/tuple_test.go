@@ -61,3 +61,16 @@ func TestTriple(t *testing.T) {
 		t.Errorf("Triple.Values() = %v, %v, %v want %v, %v, %v", a, b, c, v1, v2, v3)
 	}
 }
+
+func TestQuad(t *testing.T) {
+	v1, v2, v3, v4 := 1, 2, 3, 4
+	q := Quad[int]{v1, v2, v3, v4}
+	if q[0] != v1 || q[1] != v2 || q[2] != v3 || q[3] != v4 {
+		t.Errorf("Quad[0,1,2,3] = %v, %v, %v, %v want %v, %v, %v, %v", q[0], q[1], q[2], q[3], v1, v2, v3, v4)
+	}
+	a, b, c, d := q.Values()
+	if a != v1 || b != v2 || c != v3 || d != v4 {
+		t.Errorf("Quad.Values() = %v, %v, %v, %v want %v, %v, %v, %v", a, b, c, d, v1, v2, v3, v4)
+	}
+
+}
