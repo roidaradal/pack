@@ -1,4 +1,4 @@
-v0.1.3 - Tuples, Options, Ranges
+v0.1.3 - Option and Tuples
     - Commit:
     x Option type
     - Tuple types: Tuple2, Tuple3, Tuple4
