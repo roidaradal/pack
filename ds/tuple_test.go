@@ -37,3 +37,15 @@ func TestTuple4(t *testing.T) {
 		t.Errorf("Tuple4.Values() = %v, %v, %v, %v want %v, %v, %v, %v", a, b, c, d, v1, v2, v3, v4)
 	}
 }
+
+func TestPair(t *testing.T) {
+	v1, v2 := 6, 7
+	p := Pair[int]{v1, v2}
+	if p[0] != v1 || p[1] != v2 {
+		t.Errorf("Pair[0,1] = %v, %v, want %v, %v", p[0], p[1], v1, v2)
+	}
+	a, b := p.Values()
+	if a != v1 || b != v2 {
+		t.Errorf("Pair.Values() = %v, %v, want %v, %v", a, b, v1, v2)
+	}
+}
