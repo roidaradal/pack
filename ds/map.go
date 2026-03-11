@@ -10,6 +10,33 @@ import (
 
 type Map[K comparable, V any] map[K]V
 
+// ZipMap creates a new Map by zipping the keys and values
+func ZipMap[K comparable, V any](keys List[K], values List[V]) Map[K, V] {
+	m := make(Map[K, V], len(keys))
+	numValues := len(values)
+	for i, key := range keys {
+		if i >= numValues {
+			break // stop if no more values
+		}
+		m[key] = values[i]
+	}
+	return m
+}
+
+// Unzip returns the list of Map keys and values, where order of keys is same as corresponding values
+func (m Map[K, V]) Unzip() (List[K], List[V]) {
+	numItems := len(m)
+	keys := make(List[K], numItems)
+	values := make(List[V], numItems)
+	i := 0
+	for k, v := range m {
+		keys[i] = k
+		values[i] = v
+		i++
+	}
+	return keys, values
+}
+
 // String returns the string representation of Map, where keys are sorted
 func (m Map[K, V]) String() string {
 	out := make([]string, 0, len(m))

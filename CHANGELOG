@@ -5,8 +5,7 @@ v0.1.5 - Sets
     x Map tests
     x Set tests
     x Map update functions
-    - Map zips and transforms
-        - Zip, Unzip, Swap, SwapList
+    x Map zips and transforms
     - Map group functions
         - GroupByValue, GroupByFunc
         - GroupByValueList, GroupByFuncList

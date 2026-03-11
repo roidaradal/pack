@@ -154,3 +154,35 @@ func TestMap(t *testing.T) {
 		t.Errorf("Map.IsEmpty() = %t, want true", isEmpty)
 	}
 }
+
+func TestZipMap(t *testing.T) {
+	keys := []string{"a", "b", "c"}
+	values := List[int]{1, 2, 3}
+	m := ZipMap(keys, values)
+	for i, key := range keys {
+		want := values[i]
+		actual, ok := m[key]
+		if actual != want || !ok {
+			t.Errorf("ZipMap[%q] = %d, %v, want %d, true", key, actual, ok, want)
+		}
+		key = key + "x"
+		actual, ok = m[key]
+		if actual != 0 || ok {
+			t.Errorf("ZipMap[%q] = %d, %v, want 0, false", key, actual, ok)
+		}
+	}
+	keys2, values2 := m.Unzip()
+	keySet1, keySet2 := NewSetFrom(keys), NewSetFrom(keys2)
+	valSet1, valSet2 := NewSetFrom(values), NewSetFrom(values2)
+	if keySet1.HasNoDifference(keySet2) == false {
+		t.Errorf("Unzip.Keys = %v, want %v", keys2, keys)
+	}
+	if valSet1.HasNoDifference(valSet2) == false {
+		t.Errorf("Unzip.Values = %v, want %v", values2, values)
+	}
+	values2 = List[int]{1, 2}
+	m2 := ZipMap(keys, values2)
+	if m2.Len() != 2 {
+		t.Errorf("ZipMap.Len = %d, want 2", m2.Len())
+	}
+}
