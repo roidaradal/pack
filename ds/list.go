@@ -1,5 +1,10 @@
 package ds
 
+import (
+	"math/rand/v2"
+	"slices"
+)
+
 type List[T any] []T
 
 // NewList creates an empty List with given capacity
@@ -37,20 +42,107 @@ func (l List[T]) Copy() List[T] {
 	return append(List[T]{}, l...)
 }
 
-// ToAny
+// ToAny creates a List of <any> items from the List
+func (l List[T]) ToAny() List[any] {
+	items := make([]any, len(l))
+	for i, item := range l {
+		items[i] = item
+	}
+	return items
+}
 
-// Remove
+// IndexFunc returns the index of item (or -1 if not in List), using the item function
+func (l List[T]) IndexFunc(itemFn func(T) bool) int {
+	return slices.IndexFunc(l, itemFn)
+}
 
-// Has
+// AllIndexFunc returns all indexes of item in the List, using the item function
+func (l List[T]) AllIndexFunc(itemFn func(T) bool) List[int] {
+	indexes := make(List[int], 0, len(l))
+	for i, item := range l {
+		if itemFn(item) {
+			indexes = append(indexes, i)
+		}
+	}
+	return indexes
+}
 
-// HasFunc
+// RemoveFunc removes the first item from List that passes the item function
+func (l List[T]) RemoveFunc(itemFn func(T) bool) (List[T], bool) {
+	index := l.IndexFunc(itemFn)
+	if index < 0 {
+		return l, false
+	}
+	result := slices.Delete(l, index, index+1)
+	return result, true
+}
 
-// GetOrDefault
+// RemoveAllFunc removes all items from List that passes the item function
+func (l List[T]) RemoveAllFunc(itemFn func(T) bool) List[T] {
+	return slices.DeleteFunc(l, itemFn)
+}
 
-// Last
+// HasFunc checks if List has an item that passes the item function
+func (l List[T]) HasFunc(itemFn func(T) bool) bool {
+	return slices.ContainsFunc(l, itemFn)
+}
 
-// MustLast
+// HasNoFunc checks if List has no item that passes the item function
+func (l List[T]) HasNoFunc(itemFn func(T) bool) bool {
+	return !slices.ContainsFunc(l, itemFn)
+}
 
-// Shuffle
+// GetFuncOrDefault returns the first item that passes the item function, or returns the default value
+func (l List[T]) GetFuncOrDefault(itemFn func(T) bool, defaultValue T) T {
+	index := l.IndexFunc(itemFn)
+	if index < 0 {
+		return defaultValue
+	}
+	return l[index]
+}
 
-// GetRandom
+// Last returns the nth item from the back of the List (starts at 1), and a flag which indicates if it is valid
+func (l List[T]) Last(rank int) (T, bool) {
+	numItems := len(l)
+	if rank > numItems || rank <= 0 {
+		var zero T
+		return zero, false
+	}
+	return l[numItems-rank], true
+}
+
+// MustLast returns the nth item from the back of the List (starts at 1).
+// Panics if rank is not 1 <= rank <= N, where N = length of List.
+func (l List[T]) MustLast(rank int) T {
+	item, ok := l.Last(rank)
+	if !ok {
+		panic("invalid rank")
+	}
+	return item
+}
+
+// GetRandom gets a random item from List, and a flag which indicates if it is valid
+func (l List[T]) GetRandom() (T, bool) {
+	numItems := len(l)
+	if numItems == 0 {
+		var zero T
+		return zero, false
+	}
+	return l[rand.IntN(numItems)], true
+}
+
+// MustGetRandom gets a random item from List, and panics if list is empty
+func (l List[T]) MustGetRandom() T {
+	item, ok := l.GetRandom()
+	if !ok {
+		panic("empty list")
+	}
+	return item
+}
+
+// Shuffle shuffles the List in place
+func (l List[T]) Shuffle() {
+	rand.Shuffle(len(l), func(i, j int) {
+		l[i], l[j] = l[j], l[i]
+	})
+}
