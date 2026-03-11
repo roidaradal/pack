@@ -36,19 +36,32 @@ func TestMap(t *testing.T) {
 	if slices.Equal(actualKeys, expKeys) == false {
 		t.Errorf("Map.Keys() = %v, want %v", actualKeys, expKeys)
 	}
+	actualKeys2 := m.SortedKeysFunc(func(k1, k2 string) int { return cmp.Compare(k1, k2) })
+	if slices.Equal(actualKeys2, expKeys) == false {
+		t.Errorf("Map.SortedKeysFunc() = %v, want %v", actualKeys2, expKeys)
+	}
 	expValues := []int{2, 3, 5}
 	actualValues := m.Values()
 	slices.Sort(actualValues)
 	if slices.Equal(actualValues, expValues) == false {
 		t.Errorf("Map.Values() = %v, want %v", actualValues, expValues)
 	}
+	actualValues2 := m.SortedValuesFunc(func(v1, v2 int) int { return cmp.Compare(v1, v2) })
+	if slices.Equal(actualValues2, expValues) == false {
+		t.Errorf("Map.SortedValuesFunc() = %v, want %v", actualValues2, expValues)
+	}
 	expEntries := []Tuple2[string, int]{{"apple", 5}, {"banana", 2}, {"orange", 3}}
 	actualEntries := m.Entries()
-	slices.SortFunc(actualEntries, func(e1, e2 Tuple2[string, int]) int {
+	sortFn := func(e1, e2 Tuple2[string, int]) int {
 		return cmp.Compare(e1.V1, e2.V1)
-	})
+	}
+	slices.SortFunc(actualEntries, sortFn)
 	if slices.Equal(actualEntries, expEntries) == false {
 		t.Errorf("Map.Entries() = %v, want %v", actualEntries, expEntries)
+	}
+	actualEntries2 := m.SortedEntriesFunc(sortFn)
+	if slices.Equal(actualEntries2, expEntries) == false {
+		t.Errorf("Map.SortedEntriesFunc() = %v, want %v", actualEntries2, expEntries)
 	}
 	keyCases := []Tuple2[string, bool]{
 		{"apple", false},
