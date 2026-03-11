@@ -82,16 +82,6 @@ func (l List[T]) RemoveAllFunc(itemFn func(T) bool) List[T] {
 	return slices.DeleteFunc(l, itemFn)
 }
 
-// HasFunc checks if List has an item that passes the item function
-func (l List[T]) HasFunc(itemFn func(T) bool) bool {
-	return slices.ContainsFunc(l, itemFn)
-}
-
-// HasNoFunc checks if List has no item that passes the item function
-func (l List[T]) HasNoFunc(itemFn func(T) bool) bool {
-	return !slices.ContainsFunc(l, itemFn)
-}
-
 // GetFuncOrDefault returns the first item that passes the item function, or returns the default value
 func (l List[T]) GetFuncOrDefault(itemFn func(T) bool, defaultValue T) T {
 	index := l.IndexFunc(itemFn)
@@ -145,4 +135,55 @@ func (l List[T]) Shuffle() {
 	rand.Shuffle(len(l), func(i, j int) {
 		l[i], l[j] = l[j], l[i]
 	})
+}
+
+// Any checks if List has an item that passes the ok function
+func (l List[T]) Any(ok func(T) bool) bool {
+	return slices.ContainsFunc(l, ok)
+}
+
+// NotAny checks if List has no item that passes the ok function
+func (l List[T]) NotAny(ok func(T) bool) bool {
+	return !slices.ContainsFunc(l, ok)
+}
+
+// All checks if all List items pass the ok function
+func (l List[T]) All(ok func(T) bool) bool {
+	if len(l) == 0 {
+		return false
+	}
+	for _, item := range l {
+		if !ok(item) {
+			return false
+		}
+	}
+	return true
+}
+
+// AnyIndexed checks if any List item passes the ok function: (index, item)
+func (l List[T]) AnyIndexed(ok func(int, T) bool) bool {
+	for i, item := range l {
+		if ok(i, item) {
+			return true
+		}
+	}
+	return false
+}
+
+// NotAnyIndexed checks if no List item passes the ok function: (index, item)
+func (l List[T]) NotAnyIndexed(ok func(int, T) bool) bool {
+	return !l.AnyIndexed(ok)
+}
+
+// AllIndexed checks if all List item passes the ok function: (index, item)
+func (l List[T]) AllIndexed(ok func(int, T) bool) bool {
+	if len(l) == 0 {
+		return false
+	}
+	for i, item := range l {
+		if !ok(i, item) {
+			return false
+		}
+	}
+	return true
 }

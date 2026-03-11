@@ -101,16 +101,6 @@ func RemoveAllFunc[T any](items []T, itemFn func(T) bool) []T {
 	return slices.DeleteFunc(items, itemFn)
 }
 
-// HasFunc checks if list has an item that passes the item function
-func HasFunc[T any](items []T, itemFn func(T) bool) bool {
-	return slices.ContainsFunc(items, itemFn)
-}
-
-// HasNoFunc checks if list has no item that passes the item function
-func HasNoFunc[T any](items []T, itemFn func(T) bool) bool {
-	return !slices.ContainsFunc(items, itemFn)
-}
-
 // GetFuncOrDefault returns the first item that passes the item function, or returns the default value
 func GetFuncOrDefault[T any](items []T, itemFn func(T) bool, defaultValue T) T {
 	index := IndexFunc(items, itemFn)
@@ -164,4 +154,55 @@ func Shuffle[T any](items []T) {
 	rand.Shuffle(len(items), func(i, j int) {
 		items[i], items[j] = items[j], items[i]
 	})
+}
+
+// Any checks if list has an item that passes the ok function
+func Any[T any](items []T, ok func(T) bool) bool {
+	return slices.ContainsFunc(items, ok)
+}
+
+// NotAny checks if list has no item that passes the ok function
+func NotAny[T any](items []T, ok func(T) bool) bool {
+	return !slices.ContainsFunc(items, ok)
+}
+
+// All checks if all list items pass the ok function
+func All[T any](items []T, ok func(T) bool) bool {
+	if len(items) == 0 {
+		return false
+	}
+	for _, item := range items {
+		if !ok(item) {
+			return false
+		}
+	}
+	return true
+}
+
+// AnyIndexed checks if any list item passes the ok function: (index, item)
+func AnyIndexed[T any](items []T, ok func(int, T) bool) bool {
+	for i, item := range items {
+		if ok(i, item) {
+			return true
+		}
+	}
+	return false
+}
+
+// NotAnyIndexed checks if no list item passes the ok function: (index, item)
+func NotAnyIndexed[T any](items []T, ok func(int, T) bool) bool {
+	return !AnyIndexed(items, ok)
+}
+
+// AllIndexed checks if all list item passes the ok function: (index, item)
+func AllIndexed[T any](items []T, ok func(int, T) bool) bool {
+	if len(items) == 0 {
+		return false
+	}
+	for i, item := range items {
+		if !ok(i, item) {
+			return false
+		}
+	}
+	return true
 }

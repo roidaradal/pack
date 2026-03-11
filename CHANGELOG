@@ -3,7 +3,7 @@ v0.1.6 - Lists
     x List type
     x List methods
     x Equality functions
-    - List check functions
+    x List check functions
     - List ordered functions
     - List compare functions
     - List functional programming
