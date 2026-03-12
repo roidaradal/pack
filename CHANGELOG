@@ -3,7 +3,7 @@ v0.1.9 - List Package Tests
 v0.1.8 - List Method Tests
     - Commit:
     x Test list type
-    - Test NumList methods
+    x Test NumList methods
     - Test list methods
     - Test list check methods
     - Test list functional methods

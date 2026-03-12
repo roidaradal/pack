@@ -70,6 +70,17 @@ func TestFnMethods(t *testing.T) {
 }
 
 func TestNumList(t *testing.T) {
-	// TODO: NumList.ToList
-	// TODO: Sum, Product
+	n := NumList[int]{1, 2, 3, 4, 5, 6}
+	l := n.ToList()
+	if l.Len() != 6 {
+		t.Errorf("NumList.ToList.Len() = %d, want 5", l.Len())
+	}
+	actual, want := n.Sum(), 21
+	if actual != want {
+		t.Errorf("NumList.Sum() = %d, want %d", actual, want)
+	}
+	actual, want = n.Product(), 720
+	if actual != want {
+		t.Errorf("NumList.Product() = %d, want %d", actual, want)
+	}
 }
