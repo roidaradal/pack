@@ -1,5 +1,9 @@
 package dict
 
+import (
+	"encoding/json"
+)
+
 // Zip creates a new map by zipping the keys and values
 func Zip[K comparable, V any](keys []K, values []V) map[K]V {
 	m := make(map[K]V, len(keys))
@@ -47,4 +51,59 @@ func SwapList[K, V comparable](items map[K][]V) map[V]K {
 		}
 	}
 	return inverse
+}
+
+// FromStruct creates a map[string]V from given struct pointer.
+// Struct field values must all be of the same type.
+func FromStruct[V, T any](structRef *T) (map[string]V, error) {
+	output := make(map[string]V)
+	if structRef == nil {
+		return output, nil
+	}
+	bytes, err := json.Marshal(structRef)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(bytes, &output)
+	if err != nil {
+		return nil, err
+	}
+	return output, nil
+}
+
+// ToStruct creates a struct reference from given Object
+func ToStruct[T any](obj Object) (*T, error) {
+	var output T
+	if obj == nil {
+		return &output, nil
+	}
+	bytes, err := json.Marshal(obj)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(bytes, &output)
+	if err != nil {
+		return nil, err
+	}
+	return &output, nil
+}
+
+// ToObject creates an Object from given struct pointer
+func ToObject[T any](structRef *T) (Object, error) {
+	return FromStruct[any](structRef)
+}
+
+// Pruned creates an Object from given struct pointer, but only keeps given fieldNames
+func Pruned[T any](structRef *T, fieldNames ...string) (Object, error) {
+	fullObj, err := ToObject(structRef)
+	if err != nil {
+		return nil, err
+	}
+	obj := make(Object, len(fieldNames))
+	for _, fieldName := range fieldNames {
+		if value, ok := fullObj[fieldName]; ok {
+			obj[fieldName] = value
+		}
+	}
+	return obj, nil
 }
