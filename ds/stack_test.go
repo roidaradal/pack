@@ -49,8 +49,7 @@ func TestStack(t *testing.T) {
 	}
 	// Copy
 	s2 := s.Copy()
-	wantItems := s.Items()
-	actualItems = s2.Items()
+	wantItems, actualItems := s.Items(), s2.Items()
 	if slices.Equal(wantItems, actualItems) == false {
 		t.Errorf("Stack.Copy.Items() = %v, want %v", actualItems, wantItems)
 	}
@@ -60,7 +59,7 @@ func TestStack(t *testing.T) {
 	if actualFlag != true {
 		t.Errorf("Stack.Clear.IsEmpty() = %t, want %t", actualFlag, true)
 	}
-	// Check that original stack is unchanged
+	// Check original stack is unchanged
 	actualItems = s.Items()
 	if slices.Equal(items, actualItems) == false {
 		t.Errorf("Stack.Items() = %v, want %v", actualItems, items)
