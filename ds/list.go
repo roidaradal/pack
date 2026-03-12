@@ -198,6 +198,17 @@ func (l List[T]) AllIndexed(ok func(int, T) bool) bool {
 	return true
 }
 
+// CountFunc counts the number of item that passes the ok function
+func (l List[T]) CountFunc(ok func(T) bool) int {
+	count := 0
+	for _, item := range l {
+		if ok(item) {
+			count += 1
+		}
+	}
+	return count
+}
+
 // ToList type coerces the NumList to List
 func (l NumList[T]) ToList() List[T] {
 	return List[T](l)

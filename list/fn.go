@@ -2,6 +2,17 @@ package list
 
 import "github.com/roidaradal/pack/number"
 
+// CountFunc counts the number of items that passes the ok function
+func CountFunc[T any](items []T, ok func(T) bool) int {
+	count := 0
+	for _, item := range items {
+		if ok(item) {
+			count += 1
+		}
+	}
+	return count
+}
+
 // Sum computes the sum of number items
 func Sum[T number.Type](numbers []T) T {
 	var total T = 0

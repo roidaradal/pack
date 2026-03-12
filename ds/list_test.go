@@ -23,6 +23,7 @@ func TestCheckMethods(t *testing.T) {
 	// TODO: Any, AnyIndexed
 	// TODO: NotAny, NotAnyIndexed
 	// TODO: All, AllIndexed
+	// TODO: CountFunc
 }
 
 func TestNumList(t *testing.T) {
