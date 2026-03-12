@@ -21,6 +21,11 @@ func (l List[T]) Len() int {
 	return len(l)
 }
 
+// LastIndex returns the List last index
+func (l List[T]) LastIndex() int {
+	return len(l) - 1
+}
+
 // Cap returns the List capacity
 func (l List[T]) Cap() int {
 	return cap(l)
@@ -34,11 +39,6 @@ func (l List[T]) IsEmpty() bool {
 // NotEmpty checks if List is not empty
 func (l List[T]) NotEmpty() bool {
 	return len(l) > 0
-}
-
-// Clear removes all List items
-func (l List[T]) Clear() {
-	clear(l)
 }
 
 // Copy creates a new List with copied items

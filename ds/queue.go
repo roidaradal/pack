@@ -1,0 +1,95 @@
+package ds
+
+import "fmt"
+
+type Queue[T any] struct {
+	items List[T]
+}
+
+// NewQueue creates a new empty queue
+func NewQueue[T any]() *Queue[T] {
+	return new(Queue[T]{items: make(List[T], 0)})
+}
+
+// NewQueueFrom creates a new queue from list of items
+func NewQueueFrom[T any](items []T) *Queue[T] {
+	return new(Queue[T]{items: items})
+}
+
+// String returns the string representation of the queue
+func (q *Queue[T]) String() string {
+	return fmt.Sprintf("%v", q.items)
+}
+
+// Items returns the List of queue items
+func (q *Queue[T]) Items() List[T] {
+	return q.items
+}
+
+// Len returns the number of items in the queue
+func (q *Queue[T]) Len() int {
+	return q.items.Len()
+}
+
+// IsEmpty checks if queue is empty
+func (q *Queue[T]) IsEmpty() bool {
+	return q.items.IsEmpty()
+}
+
+// NotEmpty if queue is not empty
+func (q *Queue[T]) NotEmpty() bool {
+	return q.items.NotEmpty()
+}
+
+// Clear removes all queue items
+func (q *Queue[T]) Clear() {
+	q.items = make(List[T], 0)
+}
+
+// Copy creates a new Queue with copied items
+func (q *Queue[T]) Copy() *Queue[T] {
+	return NewQueueFrom[T](q.items.Copy())
+}
+
+// Enqueue adds an item to the back of the queue
+func (q *Queue[T]) Enqueue(item T) {
+	q.items = append(q.items, item)
+}
+
+// Front returns an Option that contains the front item.
+// If the queue is empty, the Option contains nil
+func (q *Queue[T]) Front() Option[T] {
+	if q.items.IsEmpty() {
+		return Nil[T]()
+	}
+	return NewOption(new(q.items[0]))
+}
+
+// MustFront returns the front item, and panics if the queue is empty
+func (q *Queue[T]) MustFront() T {
+	option := q.Front()
+	if option.IsNil() {
+		panic("empty queue")
+	}
+	return option.Value()
+}
+
+// Dequeue returns an Option that contains the front item, and removes it from the queue.
+// If the queue is empty, the Option contains nil
+func (q *Queue[T]) Dequeue() Option[T] {
+	option := q.Front()
+	if option.IsNil() {
+		return option
+	}
+	q.items = q.items[1:]
+	return option
+}
+
+// MustDequeue returns the front item and removes it from the queue, and panics if the queue is empty
+func (q *Queue[T]) MustDequeue() T {
+	option := q.Dequeue()
+	if option.IsNil() {
+		panic("empty queue")
+	}
+	return option.Value()
+}

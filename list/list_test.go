@@ -6,9 +6,9 @@ func TestList(t *testing.T) {
 	// TODO: NewEmpty
 	// TODO: Range, InclusiveRange
 	// TODO: RepeatedItem
-	// TODO: Len, Cap
+	// TODO: Len, Cap, LastIndex
 	// TODO: IsEmpty, NotEmpty
-	// TODO: Copy, Clear
+	// TODO: Copy
 }
 
 func TestListMethods(t *testing.T) {

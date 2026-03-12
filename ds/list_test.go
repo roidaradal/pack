@@ -4,9 +4,9 @@ import "testing"
 
 func TestList(t *testing.T) {
 	// TODO: NewList
-	// TODO: Len, Cap
+	// TODO: Len, Cap, LastIndex
 	// TODO: IsEmpty, NotEmpty
-	// TODO: Copy, Clear
+	// TODO: Copy
 }
 
 func TestListMethods(t *testing.T) {

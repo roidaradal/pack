@@ -1,9 +1,11 @@
 v0.1.7 - Stack and Queue
-    - Commit:
-    - Stack type
-    - Stack methods - unsafe methods return Option, Must version panics
-    - Queue type
-    - Queue methods
+    x Commit: 2026-03-12 20:58
+    x Stack type
+    x Stack methods
+    x Queue type
+    x Queue methods
+    x Test stack methods
+    x Test queue methods
 v0.1.6 - Lists
     x Commit: 2026-03-12 15:20
     x List type
