@@ -13,7 +13,7 @@ func TestListMethods(t *testing.T) {
 	// TODO: ToAny
 	// TODO: IndexFunc, AllIndexFunc
 	// TODO: RemoveFunc, RemoveAllFunc
-	// TODO: GetFuncOrDefault
+	// TODO: Get, GetFuncOrDefault
 	// TODO: Last, MustLast
 	// TODO: GetRandom, MustGetRandom
 	// TODO: Shuffle

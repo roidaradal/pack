@@ -4,9 +4,12 @@ v0.1.6 - Lists
     x List methods
     x Equality functions
     x List check functions
-    - List ordered functions
+    - List order functions
     - List compare functions
     - List functional programming
+    - Map-to-struct functions
+        - ToObject, ToStruct, FromStruct
+        - Inspect, Prune
 v0.1.5 - Sets
     x Commit: 2026-03-11 16:30
     x Set type

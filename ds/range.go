@@ -74,6 +74,11 @@ func (r Range[T]) ToSlice() []T {
 	return items
 }
 
+// ToList expands the range into a List of Integers
+func (r Range[T]) ToList() List[T] {
+	return r.ToSlice()
+}
+
 // Sum computes the sum of the Range
 func (r Range[T]) Sum() T {
 	var total T = 0

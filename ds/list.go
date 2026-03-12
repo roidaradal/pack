@@ -82,6 +82,14 @@ func (l List[T]) RemoveAllFunc(itemFn func(T) bool) List[T] {
 	return slices.DeleteFunc(l, itemFn)
 }
 
+// Get returns an Option with the List item if valid index, otherwise nil
+func (l List[T]) Get(index int) Option[T] {
+	if index < 0 || index >= len(l) {
+		return Nil[T]()
+	}
+	return NewOption(&l[index])
+}
+
 // GetFuncOrDefault returns the first item that passes the item function, or returns the default value
 func (l List[T]) GetFuncOrDefault(itemFn func(T) bool, defaultValue T) T {
 	index := l.IndexFunc(itemFn)
@@ -92,42 +100,40 @@ func (l List[T]) GetFuncOrDefault(itemFn func(T) bool, defaultValue T) T {
 }
 
 // Last returns the nth item from the back of the List (starts at 1), and a flag which indicates if it is valid
-func (l List[T]) Last(rank int) (T, bool) {
+func (l List[T]) Last(rank int) Option[T] {
 	numItems := len(l)
 	if rank > numItems || rank <= 0 {
-		var zero T
-		return zero, false
+		return Nil[T]()
 	}
-	return l[numItems-rank], true
+	return NewOption(&l[numItems-rank])
 }
 
 // MustLast returns the nth item from the back of the List (starts at 1).
 // Panics if rank is not 1 <= rank <= N, where N = length of List.
 func (l List[T]) MustLast(rank int) T {
-	item, ok := l.Last(rank)
-	if !ok {
+	item := l.Last(rank)
+	if item.IsNil() {
 		panic("invalid rank")
 	}
-	return item
+	return item.Value()
 }
 
 // GetRandom gets a random item from List, and a flag which indicates if it is valid
-func (l List[T]) GetRandom() (T, bool) {
+func (l List[T]) GetRandom() Option[T] {
 	numItems := len(l)
 	if numItems == 0 {
-		var zero T
-		return zero, false
+		return Nil[T]()
 	}
-	return l[rand.IntN(numItems)], true
+	return NewOption(&l[rand.IntN(numItems)])
 }
 
 // MustGetRandom gets a random item from List, and panics if list is empty
 func (l List[T]) MustGetRandom() T {
-	item, ok := l.GetRandom()
-	if !ok {
+	item := l.GetRandom()
+	if item.IsNil() {
 		panic("empty list")
 	}
-	return item
+	return item.Value()
 }
 
 // Shuffle shuffles the List in place
