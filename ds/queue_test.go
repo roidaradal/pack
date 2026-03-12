@@ -66,9 +66,68 @@ func TestQueue(t *testing.T) {
 	}
 }
 
-func TestQueueMethods(t *testing.T) {
-	// TODO: Enqueue
-	// TODO: Front, MustFront
-	// TODO: Dequeue, MustDequeue
+func TestQueueEnqueue(t *testing.T) {
+	q := NewQueue[int]()
+	q.Enqueue(1)
+	front := q.MustFront()
+	if front != 1 {
+		t.Errorf("Enquque.MustFront() = %d, want 1", front)
+	}
+	q.Enqueue(2)
+	q.Enqueue(3)
+	front = q.MustFront()
+	if front != 1 {
+		t.Errorf("Enquque.MustFront() = %d, want 1", front)
+	}
+	want := []int{1, 2, 3}
+	actual := q.Items()
+	if slices.Equal(want, actual) == false {
+		t.Errorf("Queue.Items() = %v, want %v", actual, want)
+	}
+}
 
+func TestQueueFront(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("Queue.MustFront() did not panic")
+		}
+	}()
+	q := NewQueue[int]()
+	front := q.Front()
+	if !front.IsNil() {
+		t.Errorf("Queue.Front() = %v, want nil", front)
+	}
+	q.Enqueue(1)
+	front = q.Front()
+	if front.IsNil() || front.Value() != 1 {
+		t.Errorf("Queue.Front() = %v, want 1", front)
+	}
+	frontItem := q.MustFront()
+	if frontItem != 1 {
+		t.Errorf("Queue.MustFront() = %d, want 1", frontItem)
+	}
+	q.Dequeue()
+	q.MustFront() // should panic
+}
+
+func TestQueueDequeue(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("Queue.MustDequeue() did not panic")
+		}
+	}()
+	q := NewQueueFrom([]int{1, 2})
+	front := q.Dequeue()
+	if front.IsNil() || front.Value() != 1 {
+		t.Errorf("Queue.Dequeue() = %v, want 1", front)
+	}
+	frontItem := q.MustDequeue()
+	if frontItem != 2 {
+		t.Errorf("Queue.MustDequeue() = %d, want 2", frontItem)
+	}
+	front = q.Dequeue()
+	if !front.IsNil() {
+		t.Errorf("Queue.Dequeue() = %v, want nil", front)
+	}
+	q.MustDequeue() // should panic
 }

@@ -66,6 +66,30 @@ func TestStack(t *testing.T) {
 	}
 }
 
+func TestStackPush(t *testing.T) {
+	s := NewStack[int]()
+	s.Push(1)
+	top := s.MustTop()
+	if top != 1 {
+		t.Errorf("Push.MustTop() = %d, want 1", top)
+	}
+	s.Push(2)
+	top = s.MustTop()
+	if top != 2 {
+		t.Errorf("Push.MustTop() = %d, want 2", top)
+	}
+	s.Push(3)
+	top = s.MustTop()
+	if top != 3 {
+		t.Errorf("Push.MustTop() = %d, want 3", top)
+	}
+	want := []int{1, 2, 3}
+	actual := s.Items()
+	if slices.Equal(want, actual) == false {
+		t.Errorf("Stack.Items() = %v, want %v", actual, want)
+	}
+}
+
 func TestStackTop(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
