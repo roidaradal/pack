@@ -169,14 +169,14 @@ func TestReverseRange(t *testing.T) {
 			t.Errorf("Range.%s() = %d, want = %d", name, actual, want)
 		}
 	}
-	sliceCases := []Pair[[]int]{
-		{r1.ToSlice(), []int{5, 4, 3, 2, 1}},
-		{r2.ToSlice(), []int{10, 9, 8, 7, 6, 5, 4, 3, 2, 1}},
+	sliceCases := []Pair[List[int]]{
+		{r1.ToList(), List[int]{5, 4, 3, 2, 1}},
+		{r2.ToList(), List[int]{10, 9, 8, 7, 6, 5, 4, 3, 2, 1}},
 	}
 	for _, x := range sliceCases {
 		items, want := x.Values()
 		if slices.Equal(items, want) == false {
-			t.Errorf("Range.ToSlice() = %v, want = %v", items, want)
+			t.Errorf("Range.ToList() = %v, want = %v", items, want)
 		}
 	}
 }

@@ -84,6 +84,11 @@ func TestMap(t *testing.T) {
 		if actual != want {
 			t.Errorf("Map[%q] = %v, want %v", key, actual, want)
 		}
+		option := m.Get(key)
+		wantFlag := want != 0
+		if option.Value() != want || option.NotNil() != wantFlag {
+			t.Errorf("Map.Get(%s) = %v, %v want %v, %v", key, option.Value(), option.NotNil(), want, wantFlag)
+		}
 	}
 	defaultValue := 69
 	getCases = []Tuple2[string, int]{

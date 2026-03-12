@@ -183,6 +183,14 @@ func (m Map[K, V]) SetDefault(key K, defaultValue V) {
 	}
 }
 
+// Get returns an Option containing the value if key exists, otherwise nil
+func (m Map[K, V]) Get(key K) Option[V] {
+	if value, ok := m[key]; ok {
+		return NewOption(&value)
+	}
+	return Nil[V]()
+}
+
 // GetOrDefault gets the value associated with key if it exists, otherwise returns the default value
 func (m Map[K, V]) GetOrDefault(key K, defaultValue V) V {
 	if value, ok := m[key]; ok {
