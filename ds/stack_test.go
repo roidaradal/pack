@@ -66,8 +66,48 @@ func TestStack(t *testing.T) {
 	}
 }
 
-func TestStackMethods(t *testing.T) {
-	// TODO: Push
-	// TODO: Top, MustTop
-	// TODO: Pop, MustPop
+func TestStackTop(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("Stack.MustTop() did not panic")
+		}
+	}()
+	s := NewStack[int]()
+	top := s.Top()
+	if !top.IsNil() {
+		t.Errorf("Stack.Top() = %v, want nil", top)
+	}
+	s.Push(1)
+	top = s.Top()
+	if top.IsNil() || top.Value() != 1 {
+		t.Errorf("Stack.Top() = %v, want 1", top)
+	}
+	topItem := s.MustTop()
+	if topItem != 1 {
+		t.Errorf("Stack.MustTop() = %v, want 1", topItem)
+	}
+	s.Pop()
+	s.MustTop() // should panic
+}
+
+func TestStackPop(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("Stack.MustPop() did not panic")
+		}
+	}()
+	s := NewStackFrom[int]([]int{1, 2})
+	top := s.Pop()
+	if top.IsNil() || top.Value() != 2 {
+		t.Errorf("Stack.Pop() = %v, want 2", top)
+	}
+	topItem := s.MustPop()
+	if topItem != 1 {
+		t.Errorf("Stack.MustPop() = %v, want 1", topItem)
+	}
+	top = s.Pop()
+	if !top.IsNil() {
+		t.Errorf("Stack.Pop() = %v, want nil", top)
+	}
+	s.MustPop() // should panic
 }
