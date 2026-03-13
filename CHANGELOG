@@ -1,7 +1,7 @@
 v0.1.9 - List Package Tests
     - Commit:
     x Test list number functions
-    - Test list order functions
+    x Test list order functions
     - Test list check functions
     - Test list functional programming
     - Test list compare queries
