@@ -236,8 +236,100 @@ func TestTallyFunctions(t *testing.T) {
 }
 
 func TestUniqueFunctions(t *testing.T) {
-	// TODO: CountUnique, CountUniqueFunc
-	// TODO: AllSame, AllSameFunc
-	// TODO: AllUnique, AllUniqueFunc
-	// TODO: Deduplicate, DeduplicateFunc
+	type testCase[T comparable] struct {
+		name   string
+		want   T
+		actual T
+	}
+	type person struct {
+		name  string
+		kind  int
+		score int
+	}
+	getName := func(p person) string { return p.name }
+	getKind := func(p person) int { return p.kind }
+	getScore := func(p person) int { return p.score }
+
+	// AllSame, AllUnique
+	// AllSameFunc, AllUniqueFunc
+	var ints0 []int
+	ints1 := []int{1, 1, 1, 1}
+	ints2 := []int{1, 2, 3, 4}
+	ints3 := []int{1, 2, 1, 3, 2, 4}
+	var persons0 []person
+	a, b, c := person{"A", 1, 10}, person{"B", 1, 15}, person{"C", 1, 10}
+	persons1 := []person{a, b, c}
+	testCases := []testCase[bool]{
+		{"AllSame", false, AllSame(ints0)},
+		{"AllSame", true, AllSame(ints1)},
+		{"AllSame", false, AllSame(ints2)},
+		{"AllSame", false, AllSame(ints3)},
+		{"AllUnique", false, AllUnique(ints0)},
+		{"AllUnique", false, AllUnique(ints1)},
+		{"AllUnique", true, AllUnique(ints2)},
+		{"AllUnique", false, AllUnique(ints3)},
+		{"AllSameFunc", false, AllSameFunc(persons0, getName)},
+		{"AllSameFunc", false, AllSameFunc(persons1, getName)},
+		{"AllSameFunc", true, AllSameFunc(persons1, getKind)},
+		{"AllSameFunc", false, AllSameFunc(persons1, getScore)},
+		{"AllUniqueFunc", false, AllUniqueFunc(persons0, getName)},
+		{"AllUniqueFunc", true, AllUniqueFunc(persons1, getName)},
+		{"AllUniqueFunc", false, AllUniqueFunc(persons1, getKind)},
+		{"AllUniqueFunc", false, AllUniqueFunc(persons1, getScore)},
+	}
+	for _, x := range testCases {
+		if x.actual != x.want {
+			t.Errorf("%s = %t, want %t", x.name, x.actual, x.want)
+		}
+	}
+	// CountUnique, CountUniqueFunc
+	testCases2 := []testCase[int]{
+		{"CountUnique", 0, CountUnique(ints0)},
+		{"CountUnique", 1, CountUnique(ints1)},
+		{"CountUnique", 4, CountUnique(ints2)},
+		{"CountUnique", 4, CountUnique(ints3)},
+		{"CountUniqueFunc", 0, CountUniqueFunc(persons0, getName)},
+		{"CountUniqueFunc", 3, CountUniqueFunc(persons1, getName)},
+		{"CountUniqueFunc", 1, CountUniqueFunc(persons1, getKind)},
+		{"CountUniqueFunc", 2, CountUniqueFunc(persons1, getScore)},
+	}
+	for _, x := range testCases2 {
+		if x.actual != x.want {
+			t.Errorf("%s = %d, want %d", x.name, x.actual, x.want)
+		}
+	}
+	// Deduplicate
+	dedup := Deduplicate(ints0)
+	if slices.Equal(dedup, ints0) == false {
+		t.Errorf("Deduplicate() = %v, want %v", dedup, ints0)
+	}
+	dedup = Deduplicate(ints1)
+	want := []int{1}
+	if slices.Equal(dedup, want) == false {
+		t.Errorf("Deduplicate() = %v, want %v", dedup, want)
+	}
+	dedup = Deduplicate(ints2)
+	if slices.Equal(dedup, ints2) == false {
+		t.Errorf("Deduplicate() = %v, want %v", dedup, ints2)
+	}
+	dedup = Deduplicate(ints3)
+	if slices.Equal(dedup, ints2) == false {
+		t.Errorf("Deduplicate() = %v, want %v", dedup, ints2)
+	}
+	// DeduplicateFunc
+	actual := DeduplicateFunc(persons1, getName)
+	wantList := []person{a, b, c}
+	if slices.Equal(actual, wantList) == false {
+		t.Errorf("DeduplicateFunc() = %v, want %v", actual, wantList)
+	}
+	actual = DeduplicateFunc(persons1, getKind)
+	wantList = []person{a}
+	if slices.Equal(actual, wantList) == false {
+		t.Errorf("DeduplicateFunc() = %v, want %v", actual, wantList)
+	}
+	actual = DeduplicateFunc(persons1, getScore)
+	wantList = []person{a, b}
+	if slices.Equal(actual, wantList) == false {
+		t.Errorf("DeduplicateFunc() = %v, want %v", actual, wantList)
+	}
 }
