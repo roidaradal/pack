@@ -1,6 +1,10 @@
 package list
 
-import "testing"
+import (
+	"maps"
+	"slices"
+	"testing"
+)
 
 func TestCompareAllAny(t *testing.T) {
 	var ints0 []int
@@ -82,6 +86,7 @@ func TestCompareAllAny(t *testing.T) {
 	if actual2 != true {
 		t.Errorf("HasNo() = %t, want %t", actual2, true)
 	}
+	// AnyTrue, AnyFalse
 	actual, actual2 = AnyTrue(bools1), AnyFalse(bools1)
 	if actual != true {
 		t.Errorf("AnyTrue() = %t, want %t", actual, true)
@@ -105,11 +110,76 @@ func TestCompareAllAny(t *testing.T) {
 	}
 }
 
-func TestListCompareQueries(t *testing.T) {
-	// TODO: IndexLookup
-	// TODO: IndexOf, AllIndexOf
-	// TODO: Remove, RemoveAll
-	// TODO: GetOrDefault
+func TestIndexFunctions(t *testing.T) {
+	// IndexLookup
+	items := []string{" ", "A", "B", "C"}
+	wantMap := map[string]int{" ": 0, "A": 1, "B": 2, "C": 3}
+	actualMap := IndexLookup(items)
+	if maps.Equal(wantMap, actualMap) == false {
+		t.Errorf("IndexLookup() = %v, want %v", actualMap, wantMap)
+	}
+	// IndexOf
+	actualIdx := IndexOf(items, "A")
+	if actualIdx != 1 {
+		t.Errorf("IndexOf() = %d, want %d", actualIdx, 1)
+	}
+	actualIdx = IndexOf(items, "C")
+	if actualIdx != 3 {
+		t.Errorf("IndexOf() = %d, want %d", actualIdx, 3)
+	}
+	actualIdx = IndexOf(items, "X")
+	if actualIdx != -1 {
+		t.Errorf("IndexOf() = %d, want %d", actualIdx, -1)
+	}
+	// AllIndexOf
+	ints := []int{1, 2, 3, 1, 2, 3, 1}
+	wantInts := []int{0, 3, 6}
+	actualInts := AllIndexOf(ints, 1)
+	if slices.Equal(actualInts, wantInts) == false {
+		t.Errorf("AllIndexOf() = %d, want %d", actualInts, wantInts)
+	}
+	wantInts = []int{2, 5}
+	actualInts = AllIndexOf(ints, 3)
+	if slices.Equal(actualInts, wantInts) == false {
+		t.Errorf("AllIndexOf() = %d, want %d", actualInts, wantInts)
+	}
+	wantInts = []int{}
+	actualInts = AllIndexOf(ints, 69)
+	if slices.Equal(actualInts, wantInts) == false {
+		t.Errorf("AllIndexOf() = %d, want %d", actualInts, wantInts)
+	}
+	// GetOrDefault
+	defaultValue := 69
+	actual := GetOrDefault(ints, 3, defaultValue)
+	if actual != 3 {
+		t.Errorf("GetOrDefault() = %d, want %d", actual, 3)
+	}
+	actual = GetOrDefault(ints, 4, defaultValue)
+	if actual != defaultValue {
+		t.Errorf("GetOrDefault() = %d, want %d", actual, defaultValue)
+	}
+	// Remove
+	ints2 := Copy(ints)
+	wantInts = []int{1, 2, 1, 2, 3, 1}
+	ints2, ok := Remove(ints2, 3)
+	if !ok || slices.Equal(ints2, wantInts) == false {
+		t.Errorf("Remove() = %v, %t, want %v, true", ints2, ok, wantInts)
+	}
+	ints2, ok = Remove(ints2, 69)
+	if ok || slices.Equal(ints2, wantInts) == false {
+		t.Errorf("Remove() = %v, %t, want %v, false", ints2, ok, wantInts)
+	}
+	// RemoveAll
+	ints2 = Copy(ints)
+	wantInts = []int{2, 3, 2, 3}
+	ints2 = RemoveAll(ints2, 1)
+	if slices.Equal(ints2, wantInts) == false {
+		t.Errorf("RemoveAll() = %v, want %v", ints2, wantInts)
+	}
+	ints2 = RemoveAll(ints2, 5)
+	if slices.Equal(ints2, wantInts) == false {
+		t.Errorf("RemoveAll() = %v, want %v", ints2, wantInts)
+	}
 }
 
 func TestListCompareMethods(t *testing.T) {
