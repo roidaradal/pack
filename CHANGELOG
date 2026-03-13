@@ -3,7 +3,8 @@ v0.1.9 - List Package Tests
     x Test list number functions
     x Test list order functions
     x Test list check functions
-    - Test list functional programming
+    x Test list functional programming
+    - Test list map functions
     - Test list compare queries
     - Test list compare methods
     - Test list general methods
