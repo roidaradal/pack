@@ -25,7 +25,7 @@ func TestList(t *testing.T) {
 		}
 	}
 	if l1.IsEmpty() != true {
-		t.Errorf("List.Empty = %v, want true", l1.IsEmpty())
+		t.Errorf("List.IsEmpty = %v, want true", l1.IsEmpty())
 	}
 	if l2.NotEmpty() != true {
 		t.Errorf("List.NotEmpty = %v, want true", l2.NotEmpty())
