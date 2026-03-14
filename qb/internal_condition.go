@@ -23,7 +23,7 @@ const (
 	opGreater      operation = ">"
 	opGreaterEqual operation = ">="
 	opLesser       operation = "<"
-	opLessEqual    operation = "<="
+	opLesserEqual  operation = "<="
 	opIn           operation = "IN"
 	opNotIn        operation = "NOT IN"
 	opAnd          operation = "AND"
