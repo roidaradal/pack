@@ -1,6 +1,7 @@
 package dyn
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -181,4 +182,43 @@ func TestMustGetStructField2(t *testing.T) {
 	}
 	p := person{"abc"}
 	MustGetStructField(&p, "password") // should panic
+}
+
+func TestGetStructFieldTag(t *testing.T) {
+	type person struct {
+		Name     string `col:"name" json:"username"`
+		Age      int    `col:"age"`
+		Password string `col:"pass" json:"-"`
+		Secret   string
+	}
+	type testCase struct {
+		structField reflect.StructField
+		key         string
+		want1       string
+		want2       bool
+	}
+	p := &person{"John", 20, "abc", "secret"}
+	colKey, jsonKey := "col", "json"
+	structValue := MustDerefValue(p)
+	structType := structValue.Type()
+	nameField := structType.Field(0)
+	ageField := structType.Field(1)
+	passwordField := structType.Field(2)
+	secretField := structType.Field(3)
+	testCases := []testCase{
+		{nameField, colKey, "name", true},
+		{nameField, jsonKey, "username", true},
+		{ageField, colKey, "age", true},
+		{ageField, jsonKey, "", false},
+		{passwordField, colKey, "pass", true},
+		{passwordField, jsonKey, "-", true},
+		{secretField, colKey, "", false},
+		{secretField, jsonKey, "", false},
+	}
+	for _, x := range testCases {
+		actual1, actual2 := GetStructFieldTag(x.structField, x.key)
+		if actual1 != x.want1 || actual2 != x.want2 {
+			t.Errorf("GetStructFieldTag() = %s, %t, want %s, %t", actual1, actual2, x.want1, x.want2)
+		}
+	}
 }

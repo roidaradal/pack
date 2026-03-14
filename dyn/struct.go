@@ -5,6 +5,11 @@ import (
 	"reflect"
 )
 
+// GetStructFieldTag extracts the tag value from the struct field
+func GetStructFieldTag(structField reflect.StructField, tagKey string) (string, bool) {
+	return structField.Tag.Lookup(tagKey)
+}
+
 // SetStructField sets item.field = value for the given struct pointer, returns flag for successful operation
 func SetStructField(structRef any, field string, value any) bool {
 	// Get struct field
