@@ -21,11 +21,11 @@ func (c matchAllCombo[T]) Test(_ T) bool {
 // Value Combo: uses valueCondition
 type valueCombo[T any] struct {
 	valueCondition
-	test func(T) bool
+	test TestFn[T]
 }
 
 // newValueCombo creates a new valueCombo
-func newValueCombo[T any](condition valueCondition, test func(T) bool) valueCombo[T] {
+func newValueCombo[T any](condition valueCondition, test TestFn[T]) valueCombo[T] {
 	return valueCombo[T]{condition, test}
 }
 
@@ -36,11 +36,11 @@ func (c valueCombo[T]) Test(item T) bool {
 // List Combo: uses listCondition
 type listCombo[T any] struct {
 	listCondition
-	test func(T) bool
+	test TestFn[T]
 }
 
 // newListCombo creates a new listCombo
-func newListCombo[T any](condition listCondition, test func(T) bool) listCombo[T] {
+func newListCombo[T any](condition listCondition, test TestFn[T]) listCombo[T] {
 	return listCombo[T]{condition, test}
 
 }
@@ -52,11 +52,11 @@ func (c listCombo[T]) Test(item T) bool {
 // Multi Combo: uses multiCondition
 type multiCombo[T any] struct {
 	multiCondition
-	test func(T) bool
+	test TestFn[T]
 }
 
 // newMultiCombo creates a new multiCombo
-func newMultiCombo[T any](condition multiCondition, test func(T) bool) multiCombo[T] {
+func newMultiCombo[T any](condition multiCondition, test TestFn[T]) multiCombo[T] {
 	return multiCombo[T]{condition, test}
 }
 
