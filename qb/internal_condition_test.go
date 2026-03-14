@@ -7,3 +7,8 @@ func TestKV(t *testing.T) {
 	// TODO: newColumnValueList
 	// TODO: newFieldColumnValue
 }
+
+func TestInternalCondition(t *testing.T) {
+	// TODO: soloConditionValues
+	// TODO: listCondition
+}
