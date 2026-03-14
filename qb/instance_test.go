@@ -30,3 +30,11 @@ func TestNewInstance(t *testing.T) {
 		}
 	}
 }
+
+func TestInstanceMethods(t *testing.T) {
+	// TODO: LookupColumnName
+	// TODO: Column
+	// TODO: Columns
+	// TODO: Field
+	// TODO: Fields
+}

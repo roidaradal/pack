@@ -2,6 +2,9 @@ package qb
 
 import "testing"
 
-func TestReadStructColumns(t *testing.T) {
+func TestInternalColumns(t *testing.T) {
 	// TODO: readStructColumns
+	// TODO: allColumns
+	// TODO: getColumnFieldName
+	// TODO: getFieldColumnName
 }

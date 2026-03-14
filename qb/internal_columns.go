@@ -21,7 +21,7 @@ type columnsInfo struct {
 
 // Internal: given the struct pointer, extract all column and field names
 // Uses recursion for embedded struct fields.
-func readStructColumns(this *Instance, structRef any) *columnsInfo {
+func (i *Instance) readStructColumns(structRef any) *columnsInfo {
 	info := new(columnsInfo{
 		columns:        make(ds.List[string], 0),
 		columnFields:   make(ds.Map[string, string]),
@@ -46,7 +46,7 @@ func readStructColumns(this *Instance, structRef any) *columnsInfo {
 			if !ok {
 				continue // skip if not a valid inner struct ref
 			}
-			inner := readStructColumns(this, innerStructRef)
+			inner := i.readStructColumns(innerStructRef)
 			info.columns = append(info.columns, inner.columns...)
 			info.columnFields.Update(inner.columnFields)
 			info.fieldColumns.Update(inner.fieldColumns)
@@ -60,7 +60,7 @@ func readStructColumns(this *Instance, structRef any) *columnsInfo {
 			} else if columnName == skipColumnValue {
 				continue // skip if column is explicitly set to skip
 			}
-			columnName = this.prepareColumn(columnName)
+			columnName = i.prepareColumn(columnName)
 			structFieldRef, ok := dyn.RefValue(structValue.Field(idx))
 			if !ok {
 				continue // skip if struct field cannot be referenced
@@ -73,4 +73,26 @@ func readStructColumns(this *Instance, structRef any) *columnsInfo {
 		}
 	}
 	return info
+}
+
+// Internal: allColumns returns the column names of given item's type
+func (i *Instance) allColumns(item any) ds.List[string] {
+	typeName := dyn.TypeName(item)
+	return i.typeColumns.GetOrDefault(typeName, ds.List[string]{})
+}
+
+// Internal: get corresponding field name from given type's column name
+func (i *Instance) getColumnFieldName(typeName, columnName string) string {
+	if i.typeColumnFields.NoKey(typeName) {
+		return ""
+	}
+	return i.typeColumnFields[typeName][columnName]
+}
+
+// Internal: get corresponding column name from given type's field name
+func (i *Instance) getFieldColumnName(typeName, fieldName string) string {
+	if i.typeFieldColumns.NoKey(typeName) {
+		return ""
+	}
+	return i.typeFieldColumns[typeName][fieldName]
 }

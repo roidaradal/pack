@@ -33,6 +33,7 @@ func TestAddType(t *testing.T) {
 	fmt.Println(this.typeColumns)
 	fmt.Println(this.typeColumnFields)
 	fmt.Println(this.typeFieldColumns)
+	// TODO: Finish this test
 }
 
 func TestPrepareColumn(t *testing.T) {

@@ -33,7 +33,7 @@ func AddType[T any](this *Instance, structRef *T) error {
 	}
 	typeName := dyn.TypeName(structRef)
 
-	info := readStructColumns(this, structRef)
+	info := this.readStructColumns(structRef)
 	this.addressColumns.Update(info.addressColumns)
 	this.typeColumns[typeName] = info.columns
 	this.typeColumnFields[typeName] = info.columnFields
