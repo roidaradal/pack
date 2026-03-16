@@ -15,10 +15,10 @@ func TestInternalRows(t *testing.T) {
 		password string
 	}
 	this := NewInstance(MySQL)
-	nameCol := this.dbType.prepareColumn("Name")
-	codeCol := this.dbType.prepareColumn("Username")
-	pwdCol := this.dbType.prepareColumn("password")
-	ageCol := this.dbType.prepareColumn("age")
+	nameCol := "Name"
+	codeCol := "Username"
+	pwdCol := "password"
+	ageCol := "age"
 	err := AddType(this, &User{})
 	if err != nil {
 		t.Errorf("AddType() error = %v", err)
@@ -30,7 +30,7 @@ func TestInternalRows(t *testing.T) {
 	rowFn3 := this.newRowCreator("User", ds.List[string]{nameCol, ageCol})
 	emptyObj := dict.Object{}
 	testCases := [][2]dict.Object{
-		{dict.Object{"`Name`": "john"}, rowFn1(&user)},
+		{dict.Object{"Name": "john"}, rowFn1(&user)},
 		{emptyObj, rowFn1(user)},  // not a struct pointer
 		{emptyObj, rowFn2(&user)}, // private field
 		{emptyObj, rowFn3(&user)}, // non-existent field

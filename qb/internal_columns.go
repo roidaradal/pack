@@ -72,7 +72,8 @@ func (i *Instance) readStructColumns(structRef any) *columnsInfo {
 			} else if columnName == skipColumnValue {
 				continue // skip if column is explicitly set to skip
 			}
-			columnName = i.prepareColumn(columnName)
+			// Note: intentionally removed column preparation here; apply prepareColumn during query build instead
+			// columnName = i.prepareColumn(columnName)
 			structFieldRef, ok := dyn.RefValue(structValue.Field(idx))
 			if !ok {
 				continue // skip if struct field cannot be referenced

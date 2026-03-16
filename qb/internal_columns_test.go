@@ -42,19 +42,19 @@ func TestReadStructColumns(t *testing.T) {
 		t.Errorf("readStructColumns() = %v, want empty info", info)
 	}
 	// Successful
-	wantCols := ds.List[string]{"`key`", "`value`"}
+	wantCols := ds.List[string]{"key", "value"}
 	info = this.readStructColumns(&Config{})
 	if slices.Equal(wantCols, info.columns) == false {
 		t.Errorf("readStructColumns() = %v, want %v", info.columns, wantCols)
 	}
 	// With embedded
-	wantCols = ds.List[string]{"`Name`", "`Logo`", "`key`", "`value`", "`Lvl`"}
+	wantCols = ds.List[string]{"Name", "Logo", "key", "value", "Lvl"}
 	info = this.readStructColumns(&School{})
 	if slices.Equal(wantCols, info.columns) == false {
 		t.Errorf("readStructColumns() = %v, want %v", info.columns, wantCols)
 	}
 	// With private embedded
-	wantCols = ds.List[string]{"`Name`", "`Address`", "`Job`", "`Age`"}
+	wantCols = ds.List[string]{"Name", "Address", "Job", "Age"}
 	info = this.readStructColumns(&Person{})
 	if slices.Equal(wantCols, info.columns) == false {
 		t.Errorf("readStructColumns() = %v, want %v", info.columns, wantCols)
@@ -94,7 +94,7 @@ func TestInternalColumnQueries(t *testing.T) {
 	john := &Person{"John", "PH", "dev", 20}
 	upc := &School{"UP", "Oblation", "12345", 3, 1000}
 	// allColumns
-	wantCols := ds.List[string]{"`Name`", "`Address`", "`Job`", "`Age`"}
+	wantCols := ds.List[string]{"Name", "Address", "Job", "Age"}
 	actualCols := this.allColumns(p)
 	if slices.Equal(actualCols, wantCols) == false {
 		t.Errorf("allColumns() = %v, want %v", actualCols, wantCols)
@@ -103,7 +103,7 @@ func TestInternalColumnQueries(t *testing.T) {
 	if slices.Equal(actualCols, wantCols) == false {
 		t.Errorf("allColumns() = %v, want %v", actualCols, wantCols)
 	}
-	wantCols = ds.List[string]{"`Name`", "`Logo`", "`Lvl`"}
+	wantCols = ds.List[string]{"Name", "Logo", "Lvl"}
 	actualCols = this.allColumns(s)
 	if slices.Equal(actualCols, wantCols) == false {
 		t.Errorf("allColumns() = %v, want %v", actualCols, wantCols)
@@ -120,11 +120,11 @@ func TestInternalColumnQueries(t *testing.T) {
 	}
 	// getColumnFieldName
 	testCases := [][2]string{
-		{"Age", this.getColumnFieldName("Person", "`Age`")},
-		{"Level", this.getColumnFieldName("School", "`Lvl`")},
-		{"", this.getColumnFieldName("Config", "`key`")},
-		{"", this.getColumnFieldName("School", "`capacity`")},
-		{"", this.getColumnFieldName("School", "`Secret`")},
+		{"Age", this.getColumnFieldName("Person", "Age")},
+		{"Level", this.getColumnFieldName("School", "Lvl")},
+		{"", this.getColumnFieldName("Config", "key")},
+		{"", this.getColumnFieldName("School", "capacity")},
+		{"", this.getColumnFieldName("School", "Secret")},
 	}
 	for _, x := range testCases {
 		want, actual := x[0], x[1]
@@ -134,8 +134,8 @@ func TestInternalColumnQueries(t *testing.T) {
 	}
 	// getFieldColumnName
 	testCases = [][2]string{
-		{"`Age`", this.getFieldColumnName("Person", "Age")},
-		{"`Lvl`", this.getFieldColumnName("School", "Level")},
+		{"Age", this.getFieldColumnName("Person", "Age")},
+		{"Lvl", this.getFieldColumnName("School", "Level")},
 		{"", this.getFieldColumnName("Config", "key")},
 		{"", this.getFieldColumnName("School", "capacity")},
 		{"", this.getFieldColumnName("School", "Secret")},
@@ -153,7 +153,7 @@ func TestInternalColumnQueries(t *testing.T) {
 		structRef            any
 		typeName, columnName string
 	}
-	nameCol, lvlCol, ageCol := "`Name`", "`Lvl`", "`Age`"
+	nameCol, lvlCol, ageCol := "Name", "Lvl", "Age"
 	testCases2 := []testCase{
 		{john.Name, true, john, "Person", nameCol},
 		{upc.Level, true, upc, "School", lvlCol},

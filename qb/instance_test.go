@@ -70,8 +70,8 @@ func TestInstanceMethods(t *testing.T) {
 		fieldRef any
 	}
 	testCases1 := []testCase1{
-		{"`Job`", &p.Job},
-		{"`Lvl`", &s.Level},
+		{"Job", &p.Job},
+		{"Lvl", &s.Level},
 		{"", &john.Name}, // Not from type singleton
 		{"", p.Name},     // Not a struct reference
 		{"", s.Logo},
@@ -113,8 +113,8 @@ func TestInstanceMethods(t *testing.T) {
 		fieldRefs []any
 	}
 	testCases3 := []testCase3{
-		{[]string{"`Job`", "`Age`", "`Name`"}, []any{&p.Job, &p.Age, &p.Name}},
-		{[]string{"`Lvl`", "`Logo`", "`Name`"}, []any{&s.Level, &s.Logo, &s.Name}},
+		{[]string{"Job", "Age", "Name"}, []any{&p.Job, &p.Age, &p.Name}},
+		{[]string{"Lvl", "Logo", "Name"}, []any{&s.Level, &s.Logo, &s.Name}},
 		{[]string{}, []any{&p.Name, &p.Age, &john.Job}}, // has one invalid fieldRef
 		{[]string{}, []any{&s.Name, &s.Logo, s.Level}},  // has one non-struct ref
 	}

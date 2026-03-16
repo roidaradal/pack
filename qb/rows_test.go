@@ -38,7 +38,7 @@ func TestRowFunctions(t *testing.T) {
 	}
 	// ToRow
 	empty := dict.Object{}
-	userObj := dict.Object{"`Name`": "john", "`Password`": "123456", "`Age`": 25}
+	userObj := dict.Object{"Name": "john", "Password": "123456", "Age": 25}
 	testCases := [][2]dict.Object{
 		{userObj, ToRow(this, user)},
 		{empty, ToRow(this, school)},
