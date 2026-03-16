@@ -171,8 +171,75 @@ func TestDerefValue(t *testing.T) {
 }
 
 func TestRefValue(t *testing.T) {
-	// TODO: RefValue
-	// TODO: MustRefValue
-	// TODO: AnyValue
-	// TODO: MustAnyValue
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("MustRefValue() did not panic")
+		}
+	}()
+	type person struct {
+		Name     string
+		password string
+	}
+	type testCase struct {
+		want1 any
+		want2 bool
+		value reflect.Value
+	}
+	p := person{"John", "123"}
+	structValue := MustDerefValue(&p)
+	nameField := structValue.FieldByName("Name")
+	pwdField := structValue.FieldByName("password")
+	testCases := []testCase{
+		{&p.Name, true, nameField},
+		{nil, false, pwdField},
+		{nil, false, structValue.FieldByName("unknown")},
+	}
+	for _, x := range testCases {
+		actual1, actual2 := RefValue(x.value)
+		if actual1 != x.want1 || actual2 != x.want2 {
+			t.Errorf("RefValue = %v, %t, want %v, %t", actual1, actual2, x.want1, x.want2)
+		}
+	}
+	actual := MustRefValue(nameField)
+	if actual != &p.Name {
+		t.Errorf("MustRefValue() = %v, want %v", actual, &p.Name)
+	}
+	MustRefValue(pwdField)
+}
+
+func TestAnyValue(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("MustAnyValue() did not panic")
+		}
+	}()
+	type person struct {
+		Name     string
+		password string
+	}
+	type testCase struct {
+		want1 any
+		want2 bool
+		value reflect.Value
+	}
+	p := person{"John", "123"}
+	structValue := MustDerefValue(&p)
+	nameField := structValue.FieldByName("Name")
+	pwdField := structValue.FieldByName("password")
+	testCases := []testCase{
+		{p.Name, true, nameField},
+		{nil, false, pwdField},
+		{nil, false, structValue.FieldByName("unknown")},
+	}
+	for _, x := range testCases {
+		actual1, actual2 := AnyValue(x.value)
+		if actual1 != x.want1 || actual2 != x.want2 {
+			t.Errorf("AnyValue = %v, %t, want %v, %t", actual1, actual2, x.want1, x.want2)
+		}
+	}
+	actual := MustAnyValue(nameField)
+	if actual != p.Name {
+		t.Errorf("MustAnyValue() = %v, want %v", actual, &p.Name)
+	}
+	MustRefValue(pwdField)
 }

@@ -15,5 +15,22 @@ func TestBuilder(t *testing.T) {
 }
 
 func TestRepeat(t *testing.T) {
-	// TODO: Repeat
+	type testCase struct {
+		want       string
+		count      int
+		text, glue string
+	}
+	testCases := []testCase{
+		{"aaaaa", 5, "a", ""},
+		{"ab-ab-ab", 3, "ab", "-"},
+		{"", 0, "a", "x"},
+		{"b,b", 2, "b", ","},
+		{"x", 1, "x", "x"},
+	}
+	for _, x := range testCases {
+		actual := Repeat(x.count, x.text, x.glue)
+		if actual != x.want {
+			t.Errorf("Repeat: got %q, want %q", actual, x.want)
+		}
+	}
 }
