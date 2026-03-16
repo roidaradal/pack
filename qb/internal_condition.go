@@ -39,6 +39,7 @@ func newColumnValue[T any](this *Instance, fieldRef *T, value T) ds.Option[colum
 	if column == "" {
 		return ds.Nil[columnValuePair]()
 	}
+	column = this.dbType.prepareColumn(column)
 	return ds.NewOption(&columnValuePair{V1: column, V2: value})
 }
 
@@ -48,6 +49,7 @@ func newColumnValueList[T any](this *Instance, fieldRef *T, values ds.List[T]) d
 	if column == "" {
 		return ds.Nil[columnValueListPair]()
 	}
+	column = this.dbType.prepareColumn(column)
 	return ds.NewOption(&columnValueListPair{V1: column, V2: values.ToAny()})
 }
 
@@ -57,6 +59,7 @@ func newFieldColumnValue(this *Instance, typeName, fieldName string, value any) 
 	if column == "" {
 		return ds.Nil[columnValuePair]()
 	}
+	column = this.dbType.prepareColumn(column)
 	return ds.NewOption(&columnValuePair{V1: column, V2: value})
 }
 
