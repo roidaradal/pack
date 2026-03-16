@@ -14,7 +14,12 @@ type mockScanner struct {
 	items []any
 }
 
-func (m mockScanner) Scan(fieldRefs ...any) error {
+func (m mockScanner) Scan(fieldRefs ...any) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("panic encountered: %v", r)
+		}
+	}()
 	if len(fieldRefs) != len(m.items) {
 		return fmt.Errorf("expected %d fieldRefs, got %d", len(m.items), len(fieldRefs))
 	}
@@ -22,7 +27,7 @@ func (m mockScanner) Scan(fieldRefs ...any) error {
 		fieldValue := dyn.MustDerefValue(fieldRef)
 		fieldValue.Set(reflect.ValueOf(m.items[i]))
 	}
-	return nil
+	return err
 }
 
 func TestRowFunctions(t *testing.T) {
@@ -89,6 +94,15 @@ func TestRowFunctions(t *testing.T) {
 	want = User{"Jane", "222", 0, ""}
 	if want != option.Value() {
 		t.Errorf("RowReader() read = %v, want %v", option.Value(), want)
+	}
+	// Valid row reader, but error in scanning (mocked by incomplete items / invalid type)
+	option, err = rowReader(mockScanner{items: []any{"Jane", 333}})
+	if err == nil || option.NotNil() {
+		t.Errorf("RowReader() read = %v, %v, want nil, err", option, err)
+	}
+	option, err = rowReader(mockScanner{items: []any{"Jane"}})
+	if err == nil || option.NotNil() {
+		t.Errorf("RowReader() read = %v, %v, want nil, err", option, err)
 	}
 	// Error because of blank columns
 	userReader := NewRowReader[User](this, nameCol, pwdCol, "")

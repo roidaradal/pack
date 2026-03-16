@@ -1,9 +1,9 @@
 v0.2.5 - QueryBuilder Condition Tests
     - Commit:
     x QB Mock Scanner test
-    - QB internal conditions tests
+    x QB condition type tests
+    - QB combo type tests
     - QB conditions tests
-    - QB internal combos tests
     - QB combos tests
 v0.2.4 - QueryBuilder Internal Tests
     x Commit: 2026-03-16 16:31
