@@ -22,6 +22,13 @@ type columnsInfo struct {
 	addressFields  ds.Map[string, string] // {FieldAddress => FieldName}
 }
 
+// IsEmpty checks if the contents of columnsInfo are all empty
+func (i *columnsInfo) IsEmpty() bool {
+	ok1 := i.columns.IsEmpty() && i.columnFields.IsEmpty() && i.fieldColumns.IsEmpty()
+	ok2 := i.addressColumns.IsEmpty() && i.addressFields.IsEmpty()
+	return ok1 && ok2
+}
+
 // Internal: given the struct pointer, extract all column and field names
 // Uses recursion for embedded struct fields.
 func (i *Instance) readStructColumns(structRef any) *columnsInfo {
@@ -65,7 +72,8 @@ func (i *Instance) readStructColumns(structRef any) *columnsInfo {
 			} else if columnName == skipColumnValue {
 				continue // skip if column is explicitly set to skip
 			}
-			columnName = i.prepareColumn(columnName)
+			// Note: intentionally removed column preparation here; apply prepareColumn during query build instead
+			// columnName = i.prepareColumn(columnName)
 			structFieldRef, ok := dyn.RefValue(structValue.Field(idx))
 			if !ok {
 				continue // skip if struct field cannot be referenced
