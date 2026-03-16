@@ -58,6 +58,9 @@ func NewRowReader[T any](this *Instance, columns ...string) RowReader[T] {
 			return nilOption, fmt.Errorf("incomplete fields")
 		}
 		err := row.Scan(fieldRefs...)
-		return ds.NewOption(&item), err
+		if err != nil {
+			return nilOption, err
+		}
+		return ds.NewOption(&item), nil
 	}
 }
