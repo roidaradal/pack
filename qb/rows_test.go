@@ -1,20 +1,33 @@
 package qb
 
 import (
+	"fmt"
 	"maps"
+	"reflect"
 	"testing"
 
 	"github.com/roidaradal/pack/dict"
+	"github.com/roidaradal/pack/dyn"
 )
 
 type mockScanner struct {
-	//this      *Instance
-	//structRef any
-	//items     []any
+	items []any
 }
 
-func (m mockScanner) Scan(fieldRefs ...any) error {
-	return nil
+func (m mockScanner) Scan(fieldRefs ...any) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("panic encountered: %v", r)
+		}
+	}()
+	if len(fieldRefs) != len(m.items) {
+		return fmt.Errorf("expected %d fieldRefs, got %d", len(m.items), len(fieldRefs))
+	}
+	for i, fieldRef := range fieldRefs {
+		fieldValue := dyn.MustDerefValue(fieldRef)
+		fieldValue.Set(reflect.ValueOf(m.items[i]))
+	}
+	return err
 }
 
 func TestRowFunctions(t *testing.T) {
@@ -51,8 +64,8 @@ func TestRowFunctions(t *testing.T) {
 	}
 	// Not a struct type
 	intReader := NewRowReader[int](this, "Value", "Decimal")
-	intOption, err := intReader(mockScanner{})
-	if err == nil || intOption.NotNil() {
+	intResult := intReader(mockScanner{})
+	if intResult.IsError() == false || intResult.Value() != 0 {
 		t.Errorf("NewRowReader[int] should return an error")
 	}
 	// Valid full reader
@@ -61,29 +74,47 @@ func TestRowFunctions(t *testing.T) {
 		t.Errorf("FullRowReader() should return a rowReader, got nil")
 	}
 	// Successful read
-	option, err := fullReader(mockScanner{})
-	if err != nil || option.IsNil() {
-		t.Errorf("FullRowReader() read = %v, %v, want <User>, nil", option, err)
+	result := fullReader(mockScanner{items: []any{"John", "111", 20}})
+	if result.NotError() == false {
+		t.Errorf("FullRowReader() read = %v, want non-error", result)
+	}
+	// Check that struct has been filled after fullReader read
+	want := User{"John", "111", 20, ""}
+	if want != result.Value() {
+		t.Errorf("FullRowReader() read = %v, want %v", result.Value(), want)
 	}
 	// Valid row reader, with specified columns
 	nameCol, pwdCol := this.Column(&userRef.Name), this.Column(&userRef.Password)
 	rowReader := NewRowReader[User](this, nameCol, pwdCol)
-	option, err = rowReader(mockScanner{})
-	if err != nil || option.IsNil() {
-		t.Errorf("RowReader() read = %v, %v, want <User>, nil", option, err)
+	result = rowReader(mockScanner{items: []any{"Jane", "222"}})
+	if result.NotError() == false {
+		t.Errorf("RowReader() read = %v, want non-error", result)
+	}
+	// Check that struct has been filled after rowReader read
+	want = User{"Jane", "222", 0, ""}
+	if want != result.Value() {
+		t.Errorf("RowReader() read = %v, want %v", result.Value(), want)
+	}
+	emptyUser := User{}
+	// Valid row reader, but error in scanning (mocked by incomplete items / invalid type)
+	result = rowReader(mockScanner{items: []any{"Jane", 333}})
+	if result.IsError() == false || result.Value() != emptyUser {
+		t.Errorf("RowReader() read = %v, want Result<%v, error>", result, emptyUser)
+	}
+	result = rowReader(mockScanner{items: []any{"Jane"}})
+	if result.IsError() == false || result.Value() != emptyUser {
+		t.Errorf("RowReader() read = %v, want Result<%v, error>", result, emptyUser)
 	}
 	// Error because of blank columns
 	userReader := NewRowReader[User](this, nameCol, pwdCol, "")
-	option, err = userReader(mockScanner{})
-	if err == nil || option.NotNil() {
-		t.Errorf("NewRowReader() read = %v, %v, want nil, err", option, err)
+	result = userReader(mockScanner{})
+	if result.IsError() == false || result.Value() != emptyUser {
+		t.Errorf("NewRowReader() read = %v, want Result<%v, error>", result, emptyUser)
 	}
 	// Error because of unknown column field
 	userReader = NewRowReader[User](this, nameCol, pwdCol, "secret")
-	option, err = userReader(mockScanner{})
-	if err == nil || option.NotNil() {
-		t.Errorf("NewRowReader() read = %v, %v, want nil, err", option, err)
+	result = userReader(mockScanner{})
+	if result.IsError() == false || result.Value() != emptyUser {
+		t.Errorf("NewRowReader() read = %v, want Result<%v, error>", result, emptyUser)
 	}
-	// TODO: Check that item was read to fieldRefs for FullRowReader
-	// TODO: Check that item was read to fieldRefs for RowReader with specified columns
 }

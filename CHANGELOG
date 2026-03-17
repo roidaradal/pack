@@ -1,10 +1,12 @@
 v0.2.5 - QueryBuilder Condition Tests
-    - Commit:
-    - QB internal conditions tests
-    - QB conditions tests
-    - QB internal combos tests
-    - QB combos tests
-    - QB Mock Scanner test
+    x Commit: 2026-03-17 08:54
+    x QB Mock Scanner test
+    x QB condition type tests
+    x QB combo type tests
+    x Add ds.Result type
+    x Update RowReader to use ds.Result
+    x QB conditions tests
+    x QB combos tests
 v0.2.4 - QueryBuilder Internal Tests
     x Commit: 2026-03-16 16:31
     x Additional str and dyn tests
