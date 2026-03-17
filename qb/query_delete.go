@@ -6,6 +6,7 @@ import (
 
 type DeleteQuery[T any] struct {
 	conditionQuery[T]
+	orderedLimit
 }
 
 // NewDeleteQuery creates a new DeleteQuery
@@ -23,5 +24,9 @@ func (q DeleteQuery[T]) BuildQuery() (string, []any) {
 	}
 	query := "DELETE FROM %s WHERE %s"
 	query = fmt.Sprintf(query, q.table, condition)
+	orderLimitString := q.mustLimitString()
+	if orderLimitString != "" {
+		query = fmt.Sprintf("%s %s", query, orderLimitString)
+	}
 	return query, values
 }

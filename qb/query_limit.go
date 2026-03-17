@@ -39,8 +39,8 @@ func (q *orderedLimit) Limit(limit uint) *orderedLimit {
 	return q
 }
 
-// String builds the orderString and limitString
-func (q *orderedLimit) String() string {
+// fullString builds the orderString and limitString
+func (q *orderedLimit) fullString() string {
 	output := make([]string, 0, 2)
 	orderString := q.orderString()
 	if orderString != "" {
@@ -62,5 +62,5 @@ func (q *orderedLimit) mustLimitString() string {
 	if q.limit == 0 {
 		return ""
 	}
-	return q.String()
+	return q.fullString()
 }

@@ -60,7 +60,7 @@ func TestOrderedLimit(t *testing.T) {
 		}
 	}
 
-	// String
+	// fullString
 	type testCase2 struct {
 		q          *orderedLimit
 		wantString string
@@ -77,7 +77,7 @@ func TestOrderedLimit(t *testing.T) {
 		{q2, "ORDER BY `CreatedAt` DESC"},
 	}
 	for _, x := range testCases2 {
-		actualString := x.q.String()
+		actualString := x.q.fullString()
 		if actualString != x.wantString {
 			t.Errorf("orderedLimit.String() = %q, want %q", actualString, x.wantString)
 		}
