@@ -64,8 +64,8 @@ func TestRowFunctions(t *testing.T) {
 	}
 	// Not a struct type
 	intReader := NewRowReader[int](this, "Value", "Decimal")
-	intOption, err := intReader(mockScanner{})
-	if err == nil || intOption.NotNil() {
+	intResult := intReader(mockScanner{})
+	if intResult.IsError() == false || intResult.Value() != 0 {
 		t.Errorf("NewRowReader[int] should return an error")
 	}
 	// Valid full reader
@@ -74,46 +74,47 @@ func TestRowFunctions(t *testing.T) {
 		t.Errorf("FullRowReader() should return a rowReader, got nil")
 	}
 	// Successful read
-	option, err := fullReader(mockScanner{items: []any{"John", "111", 20}})
-	if err != nil || option.IsNil() {
-		t.Errorf("FullRowReader() read = %v, %v, want <User>, nil", option, err)
+	result := fullReader(mockScanner{items: []any{"John", "111", 20}})
+	if result.NotError() == false {
+		t.Errorf("FullRowReader() read = %v, want non-error", result)
 	}
 	// Check that struct has been filled after fullReader read
 	want := User{"John", "111", 20, ""}
-	if want != option.Value() {
-		t.Errorf("FullRowReader() read = %v, want %v", option.Value(), want)
+	if want != result.Value() {
+		t.Errorf("FullRowReader() read = %v, want %v", result.Value(), want)
 	}
 	// Valid row reader, with specified columns
 	nameCol, pwdCol := this.Column(&userRef.Name), this.Column(&userRef.Password)
 	rowReader := NewRowReader[User](this, nameCol, pwdCol)
-	option, err = rowReader(mockScanner{items: []any{"Jane", "222"}})
-	if err != nil || option.IsNil() {
-		t.Errorf("RowReader() read = %v, %v, want <User>, nil", option, err)
+	result = rowReader(mockScanner{items: []any{"Jane", "222"}})
+	if result.NotError() == false {
+		t.Errorf("RowReader() read = %v, want non-error", result)
 	}
 	// Check that struct has been filled after rowReader read
 	want = User{"Jane", "222", 0, ""}
-	if want != option.Value() {
-		t.Errorf("RowReader() read = %v, want %v", option.Value(), want)
+	if want != result.Value() {
+		t.Errorf("RowReader() read = %v, want %v", result.Value(), want)
 	}
+	emptyUser := User{}
 	// Valid row reader, but error in scanning (mocked by incomplete items / invalid type)
-	option, err = rowReader(mockScanner{items: []any{"Jane", 333}})
-	if err == nil || option.NotNil() {
-		t.Errorf("RowReader() read = %v, %v, want nil, err", option, err)
+	result = rowReader(mockScanner{items: []any{"Jane", 333}})
+	if result.IsError() == false || result.Value() != emptyUser {
+		t.Errorf("RowReader() read = %v, want Result<%v, error>", result, emptyUser)
 	}
-	option, err = rowReader(mockScanner{items: []any{"Jane"}})
-	if err == nil || option.NotNil() {
-		t.Errorf("RowReader() read = %v, %v, want nil, err", option, err)
+	result = rowReader(mockScanner{items: []any{"Jane"}})
+	if result.IsError() == false || result.Value() != emptyUser {
+		t.Errorf("RowReader() read = %v, want Result<%v, error>", result, emptyUser)
 	}
 	// Error because of blank columns
 	userReader := NewRowReader[User](this, nameCol, pwdCol, "")
-	option, err = userReader(mockScanner{})
-	if err == nil || option.NotNil() {
-		t.Errorf("NewRowReader() read = %v, %v, want nil, err", option, err)
+	result = userReader(mockScanner{})
+	if result.IsError() == false || result.Value() != emptyUser {
+		t.Errorf("NewRowReader() read = %v, want Result<%v, error>", result, emptyUser)
 	}
 	// Error because of unknown column field
 	userReader = NewRowReader[User](this, nameCol, pwdCol, "secret")
-	option, err = userReader(mockScanner{})
-	if err == nil || option.NotNil() {
-		t.Errorf("NewRowReader() read = %v, %v, want nil, err", option, err)
+	result = userReader(mockScanner{})
+	if result.IsError() == false || result.Value() != emptyUser {
+		t.Errorf("NewRowReader() read = %v, want Result<%v, error>", result, emptyUser)
 	}
 }

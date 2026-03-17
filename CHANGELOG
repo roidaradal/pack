@@ -4,6 +4,7 @@ v0.2.5 - QueryBuilder Condition Tests
     x QB condition type tests
     x QB combo type tests
     x Add ds.Result type
+    x Update RowReader to use ds.Result
     - QB conditions tests
     - QB combos tests
 v0.2.4 - QueryBuilder Internal Tests
