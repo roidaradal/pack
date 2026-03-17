@@ -23,8 +23,8 @@ func TestDeleteQuery(t *testing.T) {
 	// NewDeleteQuery
 	q1 := NewDeleteQuery[User](this, table)
 	q1.Where(NotEqual[User](this, &u.Username, "root"))
-	q2 := NewDeleteQuery[User](this, table)
-	q3 := NewDeleteQuery[User](this, "")
+	q2 := NewDeleteQuery[User](this, table) // no condition
+	q3 := NewDeleteQuery[User](this, "")    // blank table
 	// DeleteQuery.BuildQuery()
 	type testCase1 struct {
 		q          *DeleteQuery[User]
@@ -80,4 +80,8 @@ func TestDeleteQuery(t *testing.T) {
 			t.Errorf("ToString(DeleteQuery) = %s, want %s", actualQuery, x.wantQuery)
 		}
 	}
+	// TODO: Limit with OrderAsc
+	// TODO: Limit with OrderDesc
+	// TODO: Limit only
+	// TODO: OrderAsc/Desc only, no Limit = don't put in query
 }
