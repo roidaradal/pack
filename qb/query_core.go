@@ -33,7 +33,10 @@ type conditionQuery[T any] struct {
 
 // initialize the baseQuery
 func (q *baseQuery) initialize(this *Instance, table string) {
-	q.table = this.dbType.prepareIdentifier(table)
+	if table != "" {
+		table = this.dbType.prepareIdentifier(table)
+	}
+	q.table = table
 }
 
 // initialize a conditionQuery with required condition
