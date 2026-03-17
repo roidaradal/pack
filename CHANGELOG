@@ -3,7 +3,7 @@ v0.2.6 - Execute Queries
     x Use slices.Sorted in Maps
     x Abstract Query types
     x Rename QB conditions and combos
-    - Delete Query
+    x Delete Query
     - Replace ds.List[any] with []any
     - Query Core tests
     - Delete Query tests

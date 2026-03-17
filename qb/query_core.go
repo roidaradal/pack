@@ -1,11 +1,16 @@
 package qb
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/roidaradal/pack/ds"
 	"github.com/roidaradal/pack/dyn"
+)
+
+var (
+	errEmptyTable = errors.New("empty table")
 )
 
 // Query interface unifies all Query types:
@@ -49,6 +54,21 @@ func (q *conditionQuery[T]) initializeOptional(this *Instance, table string) {
 // Where sets the Query Condition
 func (q *conditionQuery[T]) Where(condition DualCondition[T]) {
 	q.condition = condition
+}
+
+// preBuildCheck checks if the table is set
+func (q *baseQuery) preBuildCheck() error {
+	if q.table == "" {
+		return errEmptyTable
+	}
+	return nil
+}
+
+// preBuildCheck checks if the table is set and builds the Condition
+func (q *conditionQuery[T]) preBuildCheck() (string, ds.List[any], error) {
+	err := q.baseQuery.preBuildCheck()
+	condition, values := q.condition.BuildCondition()
+	return condition, values, err
 }
 
 // ToString builds the Query string
