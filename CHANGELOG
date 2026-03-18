@@ -2,9 +2,9 @@ v0.2.8 - Tst Package
     - Commit:
     x Tst package
     x Convert conv tests
-    - Convert str tests
+    x Convert lang tests
     - Convert number tests
-    - Convert lang tests
+    - Convert str tests
     - Convert dyn tests
     - Convert dict tests
     - Convert list tests

@@ -3,7 +3,7 @@ package conv
 import (
 	"testing"
 
-	"github.com/roidaradal/pack/tst"
+	"github.com/roidaradal/tst"
 )
 
 func TestAnyToString(t *testing.T) {
