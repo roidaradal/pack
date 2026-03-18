@@ -19,13 +19,14 @@ func TestLen(t *testing.T) {
 }
 
 func TestIsEmpty(t *testing.T) {
-	testCases1 := []tst.P1W1[string, bool]{
+	type testCase = tst.P1W1[string, bool]
+	testCases1 := []testCase{
 		{"", true},
 		{"123", false},
 		{"a", false},
 	}
-	testCases2 := list.Map(testCases1, func(tc tst.P1W1[string, bool]) tst.P1W1[string, bool] {
-		return tst.P1W1[string, bool]{P1: tc.P1, W1: !tc.W1}
+	testCases2 := list.Map(testCases1, func(tc testCase) testCase {
+		return testCase{P1: tc.P1, W1: !tc.W1}
 	})
 	tst.AllP1W1(t, testCases1, "IsEmpty", IsEmpty, tst.AssertEqual)
 	tst.AllP1W1(t, testCases2, "NotEmpty", NotEmpty, tst.AssertEqual)
