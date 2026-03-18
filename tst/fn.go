@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-type AssertFn[T any] = func(*testing.T, string, T, T)
+type assertFn[T any] = func(*testing.T, string, T, T)
 
 // AssertEqual asserts that the two given values are equal
 func AssertEqual[T comparable](t *testing.T, name string, a, b T) {

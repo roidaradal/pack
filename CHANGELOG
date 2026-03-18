@@ -1,9 +1,15 @@
 v0.2.8 - Tst Package
     - Commit:
     x Tst package
-    - Convert conv tests
+    x Convert conv tests
     - Convert str tests
+    - Convert number tests
     - Convert lang tests
+    - Convert dyn tests
+    - Convert dict tests
+    - Convert list tests
+    - Convert ds tests
+    - Convert qb tests
 v0.2.7 - Update Query
     x Commit: 2026-03-17 20:47
     x Add limitQuery
