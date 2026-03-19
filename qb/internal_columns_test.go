@@ -1,10 +1,10 @@
 package qb
 
 import (
-	"slices"
 	"testing"
 
 	"github.com/roidaradal/pack/ds"
+	"github.com/roidaradal/tst"
 )
 
 func TestReadStructColumns(t *testing.T) {
@@ -19,8 +19,8 @@ func TestReadStructColumns(t *testing.T) {
 		Age int
 	}
 	type Config struct {
-		Key   string `col:"key"`
-		Value string `col:"value"`
+		Key   string `col:"AppKey"`
+		Value string `col:"AppValue"`
 	}
 	type School struct {
 		Name string
@@ -31,34 +31,22 @@ func TestReadStructColumns(t *testing.T) {
 		capacity int
 	}
 	this := NewInstance(MySQL)
+	name := "readStructColumns"
 	// Not a struct
 	info := this.readStructColumns(5)
-	if !info.IsEmpty() {
-		t.Errorf("readStructColumns() = %v, want empty info", info)
-	}
+	tst.AssertTrue(t, name, info.IsEmpty())
 	// Not a struct pointer
 	info = this.readStructColumns(Person{})
-	if !info.IsEmpty() {
-		t.Errorf("readStructColumns() = %v, want empty info", info)
-	}
+	tst.AssertTrue(t, name, info.IsEmpty())
 	// Successful
-	wantCols := ds.List[string]{"key", "value"}
 	info = this.readStructColumns(&Config{})
-	if slices.Equal(wantCols, info.columns) == false {
-		t.Errorf("readStructColumns() = %v, want %v", info.columns, wantCols)
-	}
+	tst.AssertListEqual(t, name, info.columns, ds.List[string]{"AppKey", "AppValue"})
 	// With embedded
-	wantCols = ds.List[string]{"Name", "Logo", "key", "value", "Lvl"}
 	info = this.readStructColumns(&School{})
-	if slices.Equal(wantCols, info.columns) == false {
-		t.Errorf("readStructColumns() = %v, want %v", info.columns, wantCols)
-	}
+	tst.AssertListEqual(t, name, info.columns, ds.List[string]{"Name", "Logo", "AppKey", "AppValue", "Lvl"})
 	// With private embedded
-	wantCols = ds.List[string]{"Name", "Address", "Job", "Age"}
 	info = this.readStructColumns(&Person{})
-	if slices.Equal(wantCols, info.columns) == false {
-		t.Errorf("readStructColumns() = %v, want %v", info.columns, wantCols)
-	}
+	tst.AssertListEqual(t, name, info.columns, ds.List[string]{"Name", "Address", "Job", "Age"})
 }
 
 func TestInternalColumnQueries(t *testing.T) {
@@ -79,95 +67,48 @@ func TestInternalColumnQueries(t *testing.T) {
 		Key   string `col:"key"`
 		Value string `col:"value"`
 	}
-	this := NewInstance(MySQL)
-	p := &Person{}
-	s := &School{}
-	cfg := &Config{}
-	err := AddType(this, p)
-	if err != nil {
-		t.Errorf("AddType() error: %v", err)
-	}
-	err = AddType(this, s)
-	if err != nil {
-		t.Errorf("AddType() error: %v", err)
-	}
+	p, s, cfg := new(Person), new(School), new(Config)
 	john := &Person{"John", "PH", "dev", 20}
 	upc := &School{"UP", "Oblation", "12345", 3, 1000}
+	this := testPrelude2(t, p, s)
 	// allColumns
-	wantCols := ds.List[string]{"Name", "Address", "Job", "Age"}
-	actualCols := this.allColumns(p)
-	if slices.Equal(actualCols, wantCols) == false {
-		t.Errorf("allColumns() = %v, want %v", actualCols, wantCols)
+	want1 := ds.List[string]{"Name", "Address", "Job", "Age"}
+	want2 := ds.List[string]{"Name", "Logo", "Lvl"}
+	testCases := []tst.P1W1[any, ds.List[string]]{
+		{p, want1}, {john, want1},
+		{s, want2}, {upc, want2},
+		{cfg, ds.List[string]{}}, // non-registered type
 	}
-	actualCols = this.allColumns(john)
-	if slices.Equal(actualCols, wantCols) == false {
-		t.Errorf("allColumns() = %v, want %v", actualCols, wantCols)
-	}
-	wantCols = ds.List[string]{"Name", "Logo", "Lvl"}
-	actualCols = this.allColumns(s)
-	if slices.Equal(actualCols, wantCols) == false {
-		t.Errorf("allColumns() = %v, want %v", actualCols, wantCols)
-	}
-	actualCols = this.allColumns(upc)
-	if slices.Equal(actualCols, wantCols) == false {
-		t.Errorf("allColumns() = %v, want %v", actualCols, wantCols)
-	}
-	// non-registered type
-	wantCols = ds.List[string]{}
-	actualCols = this.allColumns(cfg)
-	if slices.Equal(actualCols, wantCols) == false {
-		t.Errorf("allColumns() = %v, want %v", actualCols, wantCols)
-	}
+	tst.AllP1W1(t, testCases, "allColumns", this.allColumns, tst.AssertListEqual)
 	// getColumnFieldName
-	testCases := [][2]string{
-		{"Age", this.getColumnFieldName("Person", "Age")},
-		{"Level", this.getColumnFieldName("School", "Lvl")},
-		{"", this.getColumnFieldName("Config", "key")},
-		{"", this.getColumnFieldName("School", "capacity")},
-		{"", this.getColumnFieldName("School", "Secret")},
+	testCases2 := []tst.P2W1[string, string, string]{
+		{"Person", "Age", "Age"},
+		{"School", "Lvl", "Level"},
+		{"Config", "key", ""},
+		{"School", "capacity", ""},
+		{"School", "Secret", ""},
 	}
-	for _, x := range testCases {
-		want, actual := x[0], x[1]
-		if actual != want {
-			t.Errorf("getColumnFieldName() = %q, want %q", actual, want)
-		}
-	}
+	tst.AllP2W1(t, testCases2, "getColumnFieldName", this.getColumnFieldName, tst.AssertEqual)
 	// getFieldColumnName
-	testCases = [][2]string{
-		{"Age", this.getFieldColumnName("Person", "Age")},
-		{"Lvl", this.getFieldColumnName("School", "Level")},
-		{"", this.getFieldColumnName("Config", "key")},
-		{"", this.getFieldColumnName("School", "capacity")},
-		{"", this.getFieldColumnName("School", "Secret")},
+	testCases2 = []tst.P2W1[string, string, string]{
+		{"Person", "Age", "Age"},
+		{"School", "Level", "Lvl"},
+		{"Config", "key", ""},
+		{"School", "capacity", ""},
+		{"School", "Secret", ""},
 	}
-	for _, x := range testCases {
-		want, actual := x[0], x[1]
-		if actual != want {
-			t.Errorf("getFieldColumnName() = %q, want %q", actual, want)
-		}
-	}
+	tst.AllP2W1(t, testCases2, "getFieldColumnName", this.getFieldColumnName, tst.AssertEqual)
 	// getStructColumnValue
-	type testCase struct {
-		want1                any
-		want2                bool
-		structRef            any
-		typeName, columnName string
-	}
 	nameCol, lvlCol, ageCol := "Name", "Lvl", "Age"
-	testCases2 := []testCase{
-		{john.Name, true, john, "Person", nameCol},
-		{upc.Level, true, upc, "School", lvlCol},
-		{nil, false, *john, "Person", nameCol},
-		{nil, false, nil, "School", lvlCol},
-		{nil, false, john, "School", ageCol},
-		{nil, false, john, "Person", lvlCol},
+	testCases3 := []tst.P3W2[any, string, string, any, bool]{
+		{john, "Person", nameCol, john.Name, true},
+		{upc, "School", lvlCol, upc.Level, true},
+		{*john, "Person", nameCol, nil, false},
+		{nil, "School", lvlCol, nil, false},
+		{john, "School", ageCol, nil, false},
+		{john, "Person", lvlCol, nil, false},
 	}
-	for _, x := range testCases2 {
-		actual1, actual2 := this.getStructColumnValue(x.structRef, x.typeName, x.columnName)
-		if actual1 != x.want1 || actual2 != x.want2 {
-			t.Errorf("getStructColumnValue() = %v, %t, want %v, %t", actual1, actual2, x.want1, x.want2)
-		}
-	}
+	tst.AllP3W2(t, testCases3, "getStructColumnValue", this.getStructColumnValue, tst.AssertEqualAny, tst.AssertEqual)
 }
 
 func TestInternalFields(t *testing.T) {
@@ -177,56 +118,27 @@ func TestInternalFields(t *testing.T) {
 		password string
 	}
 	personRef := &Person{}
-	this := NewInstance(MySQL)
-	err := AddType(this, personRef)
-	if err != nil {
-		t.Errorf("AddType() = %v", err)
-	}
+	this := testPrelude(t, personRef)
 	// getFieldName
 	p1 := &Person{"John", 18, "john18"}
 	p2 := &Person{"Jane", 19, "jan19"}
-	testCases := [][2]string{
-		{"Name", this.getFieldName(&personRef.Name)},
-		{"Age", this.getFieldName(&personRef.Age)},
-		{"", this.getFieldName(nil)},     // nil fieldRef
-		{"", this.getFieldName(p1.Name)}, // non-pointer fieldRefs
-		{"", this.getFieldName(p1.Age)},
-		{"", this.getFieldName(&p1.Name)}, // fieldRefs are not from type singleton
-		{"", this.getFieldName(&p2.Age)},
+	testCases := []tst.P1W1[any, string]{
+		{&personRef.Name, "Name"}, {&personRef.Age, "Age"},
+		{nil, ""},                   // nil fieldRef
+		{p1.Name, ""}, {p1.Age, ""}, // non-pointer fieldRef
+		{&p1.Name, ""}, {&p2.Age, ""}, // fieldRefs are not from type singleton
 	}
-	for _, x := range testCases {
-		want, actual := x[0], x[1]
-		if want != actual {
-			t.Errorf("getFieldName() = %q, want %q", actual, want)
-		}
-	}
+	tst.AllP1W1(t, testCases, "getFieldName", this.getFieldName, tst.AssertEqual)
 	// getStructFieldValue
-	name, ok := getStructFieldValue[string](p1, "Name")
-	if name != p1.Name || !ok {
-		t.Errorf("getStructFieldValue() = %q, %t, want %q, true", name, ok, p1.Name)
+	testCases2 := []tst.P2W2[any, string, string, bool]{
+		{p1, "Name", p1.Name, true}, // Success
+		{*p1, "Name", "", false},    // not a structRef
+		{p2, "Job", "", false},      // unknown field
+		{p1, "password", "", false}, // private field
+		{p2, "Age", "", false},      // wrong field type
 	}
+	tst.AllP2W2(t, testCases2, "getStructFieldValue", getStructFieldValue[string], tst.AssertEqual[string], tst.AssertEqual[bool])
+
 	age, ok := getStructFieldValue[int](p2, "Age")
-	if age != p2.Age || !ok {
-		t.Errorf("getStructFieldValue() = %d, %t, want %d, true", age, ok, p2.Age)
-	}
-	// Fail to Deref
-	name, ok = getStructFieldValue[string](*p1, "Name")
-	if name != "" || ok {
-		t.Errorf("getStructFieldValue() = %q, %t, want %q, false", name, ok, "")
-	}
-	// Unknown field
-	job, ok := getStructFieldValue[string](p2, "Job")
-	if job != "" || ok {
-		t.Errorf("getStructFieldValue() = %q, %t, want %q, false", job, ok, "")
-	}
-	// Private field
-	pwd, ok := getStructFieldValue[string](p1, "password")
-	if pwd != "" || ok {
-		t.Errorf("getStructFieldValue() = %q, %t, want %q, false", pwd, ok, "")
-	}
-	// Wrong field type
-	ageStr, ok := getStructFieldValue[string](p2, "Age")
-	if ageStr != "" || ok {
-		t.Errorf("getStructFieldValue() = %q, %t, want %q, false", ageStr, ok, "")
-	}
+	tst.AssertEqualAnd(t, "getStructFieldValue", age, p2.Age, ok, true)
 }

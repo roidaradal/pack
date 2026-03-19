@@ -1,12 +1,36 @@
 package qb
 
 import (
-	"maps"
 	"testing"
 
 	"github.com/roidaradal/pack/dict"
 	"github.com/roidaradal/pack/ds"
+	"github.com/roidaradal/tst"
 )
+
+// Common steps for creating Instance and adding 1 type
+func testPrelude[T any](t *testing.T, typeRef *T) *Instance {
+	this := NewInstance(MySQL)
+	err := AddType(this, typeRef)
+	if err != nil {
+		t.Errorf("AddType() error = %v", err)
+	}
+	return this
+}
+
+// Common steps for creating Instance and adding 2 types
+func testPrelude2[T1, T2 any](t *testing.T, typeRef1 *T1, typeRef2 *T2) *Instance {
+	this := NewInstance(MySQL)
+	err := AddType(this, typeRef1)
+	if err != nil {
+		t.Errorf("AddType() error = %v", err)
+	}
+	err = AddType(this, typeRef2)
+	if err != nil {
+		t.Errorf("AddType() error = %v", err)
+	}
+	return this
+}
 
 func TestInternalRows(t *testing.T) {
 	type User struct {
@@ -14,15 +38,8 @@ func TestInternalRows(t *testing.T) {
 		Code     string `col:"Username"`
 		password string
 	}
-	this := NewInstance(MySQL)
-	nameCol := "Name"
-	codeCol := "Username"
-	pwdCol := "password"
-	ageCol := "age"
-	err := AddType(this, &User{})
-	if err != nil {
-		t.Errorf("AddType() error = %v", err)
-	}
+	nameCol, codeCol, pwdCol, ageCol := "Name", "Username", "password", "age"
+	this := testPrelude(t, &User{})
 	// newRowCreator
 	user := User{"john", "john67", "123456"}
 	rowFn1 := this.newRowCreator("User", ds.List[string]{nameCol})
@@ -30,33 +47,18 @@ func TestInternalRows(t *testing.T) {
 	rowFn3 := this.newRowCreator("User", ds.List[string]{nameCol, ageCol})
 	emptyObj := dict.Object{}
 	testCases := [][2]dict.Object{
-		{dict.Object{"Name": "john"}, rowFn1(&user)},
-		{emptyObj, rowFn1(user)},  // not a struct pointer
-		{emptyObj, rowFn2(&user)}, // private field
-		{emptyObj, rowFn3(&user)}, // non-existent field
+		{rowFn1(&user), dict.Object{"Name": "john"}},
+		{rowFn1(user), emptyObj},  // not a struct pointer
+		{rowFn2(&user), emptyObj}, // private field
+		{rowFn3(&user), emptyObj}, // non-existent field
 	}
-	for _, x := range testCases {
-		wantObj, actualObj := x[0], x[1]
-		if maps.Equal(wantObj, actualObj) == false {
-			t.Errorf("newRowCreator() = %v, want %v", actualObj, wantObj)
-		}
-	}
+	tst.All(t, testCases, "newRowCreator", tst.AssertMapEqual)
 	// getStructColumnFieldRef
-	type testCase struct {
-		column string
-		want1  any
-		want2  bool
+	testCases2 := []tst.P3W2[any, string, string, any, bool]{
+		{&user, "User", codeCol, &user.Code, true},
+		{&user, "User", nameCol, &user.Name, true},
+		{&user, "User", pwdCol, nil, false},
+		{&user, "User", ageCol, nil, false},
 	}
-	testCases2 := []testCase{
-		{codeCol, &user.Code, true},
-		{nameCol, &user.Name, true},
-		{pwdCol, nil, false},
-		{ageCol, nil, false},
-	}
-	for _, x := range testCases2 {
-		actual1, actual2 := this.getStructColumnFieldRef(&user, "User", x.column)
-		if x.want1 != actual1 || x.want2 != actual2 {
-			t.Errorf("getStructColumnFieldRef() = %v, %t, want %v, %t", actual1, actual2, x.want1, x.want2)
-		}
-	}
+	tst.AllP3W2(t, testCases2, "getStructColumnFieldRef", this.getStructColumnFieldRef, tst.AssertEqualAny, tst.AssertEqual)
 }
