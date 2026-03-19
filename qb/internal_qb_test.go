@@ -17,6 +17,19 @@ func testPrelude[T any](t *testing.T, typeRef *T) *Instance {
 	return this
 }
 
+func testPrelude2[T1, T2 any](t *testing.T, typeRef1 *T1, typeRef2 *T2) *Instance {
+	this := NewInstance(MySQL)
+	err := AddType(this, typeRef1)
+	if err != nil {
+		t.Errorf("AddType() error = %v", err)
+	}
+	err = AddType(this, typeRef2)
+	if err != nil {
+		t.Errorf("AddType() error = %v", err)
+	}
+	return this
+}
+
 func TestInternalRows(t *testing.T) {
 	type User struct {
 		Name     string
