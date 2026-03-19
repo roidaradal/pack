@@ -1,7 +1,7 @@
 v0.2.12 - Insert Query
     - Commit:
     x InsertRow Query
-    - InsertRows Query
+    x InsertRows Query
     - InsertRow Query tests
     - InsertRows Query tests
 v0.2.11 - Convert QueryBuilder Tests
