@@ -1,10 +1,10 @@
 package qb
 
 import (
-	"slices"
 	"testing"
 
 	"github.com/roidaradal/pack/ds"
+	"github.com/roidaradal/tst"
 )
 
 func TestUpdateQuery(t *testing.T) {
@@ -17,15 +17,13 @@ func TestUpdateQuery(t *testing.T) {
 		Code     string `col:"UUID"`
 	}
 	table := "users"
-	this := NewInstance(MySQL)
 	u := new(User)
-	err := AddType(this, u)
-	if err != nil {
-		t.Errorf("AddType() error = %v", err)
-	}
+	this := testPrelude(t, u)
+
 	// NewUpdateQuery
 	q0 := NewUpdateQuery[User](this, table) // no updates
 	q1 := NewUpdateQuery[User](this, "")    // no table
+
 	// Update
 	q2 := NewUpdateQuery[User](this, table) // no condition
 	Update(this, q2, &u.Username, "admin")
@@ -38,11 +36,11 @@ func TestUpdateQuery(t *testing.T) {
 	Update(this, q4, &u.secret, "secret")
 	q5 := NewUpdateQuery[User](this, table) // pair has blank column
 	q5.updates = append(q5.updates, ds.NewOption(new(columnValuePair{V1: "", V2: 5})))
-	// UpdateQuery.Update
+
+	// UpdateQuery.Update, UpdateQuery.Updates
 	q6 := NewUpdateQuery[User](this, table)
 	q6.Update(this, "Count", 5)
 	q6.Where(Greater[User](this, &u.Count, 5))
-	// TODO: UpdateQuery.Updates
 	updates := FieldUpdates{
 		"Code":     [2]any{5, 6},
 		"Password": [2]any{"hahaha", "horse"},
@@ -52,13 +50,8 @@ func TestUpdateQuery(t *testing.T) {
 	q7.Where(Equal[User](this, &u.Username, "groot"))
 
 	// UpdateQuery.BuildQuery
-	type testCase1 struct {
-		q          *UpdateQuery[User]
-		wantQuery  string
-		wantValues []any
-	}
 	emptyValues := make([]any, 0)
-	testCases1 := []testCase1{
+	testCases := []tst.P1W2[*UpdateQuery[User], string, []any]{
 		{q0, "", emptyValues},
 		{q1, "", emptyValues},
 		{q2, "UPDATE `users` SET `Username` = ? WHERE false", []any{"admin"}},
@@ -68,22 +61,19 @@ func TestUpdateQuery(t *testing.T) {
 		{q6, "UPDATE `users` SET `Count` = ? WHERE `Count` > ?", []any{5, 5}},
 		{q7, "UPDATE `users` SET `UUID` = ?, `Password` = ? WHERE `Username` = ?", []any{6, "horse", "groot"}},
 	}
-	for _, x := range testCases1 {
-		actualQuery, actualValues := x.q.BuildQuery()
-		if actualQuery != x.wantQuery || slices.Equal(actualValues, x.wantValues) == false {
-			t.Errorf("UpdateQuery.BuildQuery = %q, %v, want %q, %v", actualQuery, actualValues, x.wantQuery, x.wantValues)
-		}
-	}
+	tst.AllP1W2(t, testCases, "UpdateQuery.BuildQuery", (*UpdateQuery[User]).BuildQuery, tst.AssertEqual, tst.AssertListEqual)
+
 	// OrderAsc, OrderDesc, Limit
 	q3.OrderDesc(this, "CreatedAt").Limit(1)                      // OrderDesc + Limit
 	q6.Limit(10)                                                  // Limit only
 	q7.OrderDesc(this, "CreatedAt").OrderAsc(this, "ID").Limit(1) // Mixed Orders + Limit
 	q2.Where(Equal[User](this, &u.Username, "groot"))
 	q2.OrderAsc(this, "Username") // Order only, no limit
-	testCases1 = []testCase1{
+	testCases = []tst.P1W2[*UpdateQuery[User], string, []any]{
 		{q3, "UPDATE `users` SET `Username` = ?, `Password` = ? WHERE `Username` = ? ORDER BY `CreatedAt` DESC LIMIT 1", []any{"admin", "123", "root"}},
 		{q6, "UPDATE `users` SET `Count` = ? WHERE `Count` > ? LIMIT 10", []any{5, 5}},
 		{q7, "UPDATE `users` SET `UUID` = ?, `Password` = ? WHERE `Username` = ? ORDER BY `CreatedAt` DESC, `ID` ASC LIMIT 1", []any{6, "horse", "groot"}},
 		{q2, "UPDATE `users` SET `Username` = ? WHERE `Username` = ?", []any{"admin", "groot"}},
 	}
+	tst.AllP1W2(t, testCases, "UpdateQuery.BuildQuery", (*UpdateQuery[User]).BuildQuery, tst.AssertEqual, tst.AssertListEqual)
 }
