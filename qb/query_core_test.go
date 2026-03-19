@@ -1,11 +1,10 @@
 package qb
 
 import (
-	"errors"
-	"slices"
 	"testing"
 
 	"github.com/roidaradal/pack/dyn"
+	"github.com/roidaradal/tst"
 )
 
 func TestQueryCore(t *testing.T) {
@@ -15,17 +14,13 @@ func TestQueryCore(t *testing.T) {
 		Count    int
 	}
 	table := "users"
-	this := NewInstance(MySQL)
 	u := new(User)
-	err := AddType(this, u)
-	if err != nil {
-		t.Errorf("AddType() error = %v", err)
-	}
+	this := testPrelude(t, u)
 	type testCase struct {
 		q          *conditionQuery[User]
 		wantCond   string
 		wantValues []any
-		wantErr    error
+		errNotNil  bool
 	}
 	// initializeRequired
 	q1 := new(conditionQuery[User])
@@ -43,19 +38,16 @@ func TestQueryCore(t *testing.T) {
 	q4 := new(conditionQuery[User])
 	q4.initializeOptional(this, "")
 	testCases := []testCase{
-		{q1, wantCond1, wantValues1, nil},
-		{q2, wantCond2, wantValues2, nil},
-		{q3, "`Count` > ?", []any{5}, nil},
-		{q4, wantCond2, wantValues2, errEmptyTable},
+		{q1, wantCond1, wantValues1, false},
+		{q2, wantCond2, wantValues2, false},
+		{q3, "`Count` > ?", []any{5}, false},
+		{q4, wantCond2, wantValues2, true},
 	}
+	name := "conditionQuery.preBuildCheck"
 	for _, x := range testCases {
 		actualCond, actualValues, actualErr := x.q.preBuildCheck()
-		if actualCond != x.wantCond || slices.Equal(actualValues, x.wantValues) == false {
-			t.Errorf("conditionQuery = %q, %v, want %q, %v", actualCond, actualValues, x.wantCond, x.wantValues)
-		}
-		if (x.wantErr == nil && actualErr != nil) || (x.wantErr != nil && !errors.Is(actualErr, x.wantErr)) {
-			t.Errorf("conditionQuery.preBuildCheck error = %v, want %v", actualErr, x.wantErr)
-		}
+		tst.AssertEqual(t, name, actualCond, x.wantCond)
+		tst.AssertListEqualError(t, name, actualValues, x.wantValues, actualErr, x.errNotNil)
 	}
 }
 
@@ -74,12 +66,8 @@ func TestOrderedLimit(t *testing.T) {
 	// OrderAsc, OrderDesc
 	q1.OrderAsc(this, "")  // no column = no effect
 	q2.OrderDesc(this, "") // no column = no effect
-	if dyn.NotEqual(q1, emptyQuery) {
-		t.Errorf("OrderAsc() = %v, want %v", q1, emptyQuery)
-	}
-	if dyn.NotEqual(q2, emptyQuery) {
-		t.Errorf("OrderDesc() = %v, want %v", q2, emptyQuery)
-	}
+	tst.AssertTrue(t, "OrderAsc", dyn.IsEqual(q1, emptyQuery))
+	tst.AssertTrue(t, "OrderDesc", dyn.IsEqual(q2, emptyQuery))
 
 	q1.OrderAsc(this, "Name")
 	q2.OrderDesc(this, "CreatedAt")
@@ -90,12 +78,7 @@ func TestOrderedLimit(t *testing.T) {
 	q7.OrderDesc(this, "UpdatedAt").OrderAsc(this, "Code").Limit(10)
 
 	// orderString
-	type testCase struct {
-		q         *orderedLimit
-		wantOrder string
-		wantLimit uint
-	}
-	testCases := []testCase{
+	testCases := []tst.P1W2[*orderedLimit, string, uint]{
 		{q0, "", 0},
 		{q1, "`Name` ASC", 0},
 		{q2, "`CreatedAt` DESC", 0},
@@ -105,19 +88,13 @@ func TestOrderedLimit(t *testing.T) {
 		{q6, "`Code` ASC, `UpdatedAt` DESC", 5},
 		{q7, "`UpdatedAt` DESC, `Code` ASC", 10},
 	}
-	for _, x := range testCases {
-		actualOrder := x.q.orderString()
-		actualLimit := x.q.limit
-		if actualOrder != x.wantOrder || actualLimit != x.wantLimit {
-			t.Errorf("orderedLimit() = %q, %d, want %q, %d", actualOrder, actualLimit, x.wantOrder, x.wantLimit)
-		}
+	orderStringLimit := func(q *orderedLimit) (string, uint) {
+		return q.orderString(), q.limit
 	}
+	tst.AllP1W2(t, testCases, "OrderString,Limit", orderStringLimit, tst.AssertEqual[string], tst.AssertEqual[uint])
 
 	// fullString
-	type testCase2 struct {
-		q          *orderedLimit
-		wantString string
-	}
+	type testCase2 = tst.P1W1[*orderedLimit, string]
 	c0 := testCase2{q0, ""}
 	c3 := testCase2{q3, "LIMIT 5"}
 	c4 := testCase2{q4, "ORDER BY `Code` ASC LIMIT 10"}
@@ -129,22 +106,10 @@ func TestOrderedLimit(t *testing.T) {
 		{q1, "ORDER BY `Name` ASC"},
 		{q2, "ORDER BY `CreatedAt` DESC"},
 	}
-	for _, x := range testCases2 {
-		actualString := x.q.fullString()
-		if actualString != x.wantString {
-			t.Errorf("orderedLimit.String() = %q, want %q", actualString, x.wantString)
-		}
-	}
+	tst.AllP1W1(t, testCases2, "orderedLimit.fullString", (*orderedLimit).fullString, tst.AssertEqual)
 	// mustLimitString
 	testCases2 = []testCase2{
-		c0, c3, c4, c5, c6, c7,
-		{q1, ""},
-		{q2, ""},
+		c0, c3, c4, c5, c6, c7, {q1, ""}, {q2, ""},
 	}
-	for _, x := range testCases2 {
-		actualString := x.q.mustLimitString()
-		if actualString != x.wantString {
-			t.Errorf("orderedLimit.String() = %q, want %q", actualString, x.wantString)
-		}
-	}
+	tst.AllP1W1(t, testCases2, "orderedLimit.mustLimitString", (*orderedLimit).mustLimitString, tst.AssertEqual)
 }
