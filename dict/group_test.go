@@ -1,36 +1,27 @@
 package dict
 
 import (
-	"maps"
 	"slices"
 	"testing"
+
+	"github.com/roidaradal/tst"
 )
 
 func TestGroupByValue(t *testing.T) {
-	m := map[string]int{
-		"a": 1,
-		"b": 2,
-		"c": 1,
-		"d": 2,
-	}
+	m := map[string]int{"a": 1, "b": 2, "c": 1, "d": 2}
 	wantEntries := []Entry[int, []string]{
 		{1, []string{"a", "c"}},
 		{2, []string{"b", "d"}},
 	}
 	g := GroupByValue(m)
 	actualEntries := SortedEntries(g)
-	if len(actualEntries) != len(wantEntries) {
-		t.Errorf("GroupByValue.Len = %d, want %d", len(actualEntries), len(wantEntries))
-	}
+	tst.AssertEqual(t, "GroupByValue.Len", len(actualEntries), len(wantEntries))
+
 	for i, actual := range actualEntries {
 		want := wantEntries[i]
-		if actual.Key != want.Key {
-			t.Errorf("GroupByValue.Key = %d, want %d", actual.Key, want.Key)
-		}
 		slices.Sort(actual.Value)
-		if slices.Equal(actual.Value, want.Value) == false {
-			t.Errorf("GroupByValue.Value = %v, want %v", actual.Value, want.Value)
-		}
+		tst.AssertEqual(t, "GroupByValue.Key", actual.Key, want.Key)
+		tst.AssertListEqual(t, "GroupByValue.Value", actual.Value, want.Value)
 	}
 }
 
@@ -57,18 +48,12 @@ func TestGroupByFunc(t *testing.T) {
 	}
 	g := GroupByFunc(m, keyFn, valueFn)
 	actualEntries := SortedEntries(g)
-	if len(actualEntries) != len(wantEntries) {
-		t.Errorf("GroupByFunc.Len = %d, want %d", len(actualEntries), len(wantEntries))
-	}
+	tst.AssertEqual(t, "GroupByFunc.Len", len(actualEntries), len(wantEntries))
 	for i, actual := range actualEntries {
 		want := wantEntries[i]
-		if actual.Key != want.Key {
-			t.Errorf("GroupByFunc.Key = %d, want %d", actual.Key, want.Key)
-		}
 		slices.Sort(actual.Value)
-		if slices.Equal(actual.Value, want.Value) == false {
-			t.Errorf("GroupByFunc.Value = %v, want %v", actual.Value, want.Value)
-		}
+		tst.AssertEqual(t, "GroupByFunc.Key", actual.Key, want.Key)
+		tst.AssertListEqual(t, "GroupByFunc.Value", actual.Value, want.Value)
 	}
 }
 
@@ -87,18 +72,12 @@ func TestGroupByValueList(t *testing.T) {
 	}
 	g := GroupByValueList(m)
 	actualEntries := SortedEntries(g)
-	if len(actualEntries) != len(wantEntries) {
-		t.Errorf("GroupByValueList.Len = %d, want %d", len(actualEntries), len(wantEntries))
-	}
+	tst.AssertEqual(t, "GroupByValueList.Len", len(actualEntries), len(wantEntries))
 	for i, actual := range actualEntries {
 		want := wantEntries[i]
-		if actual.Key != want.Key {
-			t.Errorf("GroupByValueList.Key = %d, want %d", actual.Key, want.Key)
-		}
 		slices.Sort(actual.Value)
-		if slices.Equal(actual.Value, want.Value) == false {
-			t.Errorf("GroupByValueList.Value = %v, want %v", actual.Value, want.Value)
-		}
+		tst.AssertEqual(t, "GroupByValueList.Key", actual.Key, want.Key)
+		tst.AssertListEqual(t, "GroupByValueList.Value", actual.Value, want.Value)
 	}
 }
 
@@ -120,63 +99,37 @@ func TestGroupByFuncList(t *testing.T) {
 	valueFn := func(p person) int { return p.score }
 	g := GroupByFuncList(m, keyFn, valueFn)
 	actualEntries := SortedEntries(g)
-	if len(actualEntries) != len(wantEntries) {
-		t.Errorf("GroupByFuncList.Len = %d, want %d", len(actualEntries), len(wantEntries))
-	}
+	tst.AssertEqual(t, "GroupByFuncList.Len", len(actualEntries), len(wantEntries))
 	for i, actual := range actualEntries {
 		want := wantEntries[i]
-		if actual.Key != want.Key {
-			t.Errorf("GroupByFuncList.Key = %d, want %d", actual.Key, want.Key)
-		}
 		slices.Sort(actual.Value)
-		if slices.Equal(actual.Value, want.Value) == false {
-			t.Errorf("GroupByFuncList.Value = %v, want %v", actual.Value, want.Value)
-		}
+		tst.AssertEqual(t, "GroupByFuncList.Key", actual.Key, want.Key)
+		tst.AssertListEqual(t, "GroupByFuncList.Value", actual.Value, want.Value)
 	}
 }
 
 func TestTallyValues(t *testing.T) {
 	m := map[string]int{
-		"a": 95,
-		"b": 92,
-		"c": 90,
-		"d": 94,
-		"e": 88,
-		"f": 90,
+		"a": 95, "b": 92, "c": 90,
+		"d": 94, "e": 88, "f": 90,
 	}
 	counter := TallyValues(m, []int{88, 90, 92, 94, 96})
 	want := Counter[int]{
-		88: 1,
-		90: 2,
-		92: 1,
-		94: 1,
-		96: 0,
+		88: 1, 90: 2, 92: 1, 94: 1, 96: 0,
 	}
-	if maps.Equal(counter, want) == false {
-		t.Errorf("TallyValues = %v, want %v", counter, want)
-	}
+	tst.AssertMapEqual(t, "TallyValues", counter, want)
 }
 
 func TestTallyFunc(t *testing.T) {
 	m := map[string]int{
-		"a": 95,
-		"b": 92,
-		"c": 90,
-		"d": 94,
-		"e": 88,
-		"f": 84,
-		"g": 79,
+		"a": 95, "b": 92, "c": 90, "d": 94,
+		"e": 88, "f": 84, "g": 79,
 	}
-	valueFn := func(value int) int {
+	counter := TallyFunc(m, func(value int) int {
 		return 10 * (value / 10)
-	}
-	counter := TallyFunc(m, valueFn)
+	})
 	want := Counter[int]{
-		70: 1,
-		80: 2,
-		90: 4,
+		70: 1, 80: 2, 90: 4,
 	}
-	if maps.Equal(counter, want) == false {
-		t.Errorf("TallyFunc = %v, want %v", counter, want)
-	}
+	tst.AssertMapEqual(t, "TallyFunc", counter, want)
 }
