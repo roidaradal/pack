@@ -7,22 +7,19 @@ import (
 )
 
 func TestStack(t *testing.T) {
-	// NewStack
+	// NewStack, Len, IsEmpty, NotEmpty
 	s := NewStack[int]()
 	tst.AssertEqual(t, "Stack.String", s.String(), "[]")
-	// Len
 	tst.AssertEqual(t, "Stack.Len", s.Len(), 0)
-	// IsEmpty, NotEmpty
 	tst.AssertEqual(t, "Stack.IsEmpty", s.IsEmpty(), true)
 	tst.AssertEqual(t, "Stack.NotEmpty", s.NotEmpty(), false)
-	// NewStackFrom
+	// NewStackFrom, Stack.Items
 	items := []int{1, 2, 3}
 	s = NewStackFrom[int](items)
 	tst.AssertEqual(t, "Stack.String", s.String(), "[1 2 3]")
 	tst.AssertEqual(t, "Stack.Len", s.Len(), len(items))
 	tst.AssertEqual(t, "Stack.IsEmpty", s.IsEmpty(), false)
 	tst.AssertEqual(t, "Stack.NotEmpty", s.NotEmpty(), true)
-	// Stack.Items
 	tst.AssertListEqual(t, "Stack.Items", s.Items(), items)
 	// Copy
 	s2 := s.Copy()
