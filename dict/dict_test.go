@@ -2,154 +2,106 @@ package dict
 
 import (
 	"cmp"
-	"maps"
+	"fmt"
 	"slices"
 	"testing"
+
+	"github.com/roidaradal/tst"
 )
 
 func TestDict(t *testing.T) {
-	m := map[string]int{
-		"apple":  5,
-		"orange": 3,
-		"banana": 2,
-	}
+	// Copy
+	m := map[string]int{"apple": 5, "orange": 3, "banana": 2}
 	m2 := Copy(m)
-	if maps.Equal(m, m2) == false {
-		t.Errorf("Copy() = %v, want %v", m2, m)
-	}
-	size := Len(m)
-	if size != 3 {
-		t.Errorf("Len() = %d, want 3", size)
-	}
-	notEmpty := NotEmpty(m)
-	if notEmpty != true {
-		t.Errorf("NotEmpty() = %t, want true", notEmpty)
-	}
-	expKeys := []string{"apple", "banana", "orange"}
+	tst.AssertMapEqual(t, "Copy", m2, m)
+	// Len
+	tst.AssertEqual(t, "Len", Len(m), 3)
+	// NotEmpty
+	tst.AssertEqual(t, "NotEmpty", NotEmpty(m), true)
+	// Keys
 	actualKeys := Keys(m)
 	slices.Sort(actualKeys)
-	if slices.Equal(actualKeys, expKeys) == false {
-		t.Errorf("Keys() = %v, want %v", actualKeys, expKeys)
-	}
-	expValues := []int{2, 3, 5}
+	tst.AssertListEqual(t, "Keys", actualKeys, []string{"apple", "banana", "orange"})
+	// Values
 	actualValues := Values(m)
 	slices.Sort(actualValues)
-	if slices.Equal(actualValues, expValues) == false {
-		t.Errorf("Values() = %v, want %v", actualValues, expValues)
-	}
-	expEntries := []Entry[string, int]{{"apple", 5}, {"banana", 2}, {"orange", 3}}
+	tst.AssertListEqual(t, "Values", actualValues, []int{2, 3, 5})
+	// Entries
+	wantEntries := []Entry[string, int]{{"apple", 5}, {"banana", 2}, {"orange", 3}}
 	actualEntries := Entries(m)
 	sortFn := func(e1, e2 Entry[string, int]) int {
 		return cmp.Compare(e1.Key, e2.Key)
 	}
 	slices.SortFunc(actualEntries, sortFn)
-	if slices.Equal(actualEntries, expEntries) == false {
-		t.Errorf("Entries() = %v, want %v", actualEntries, expEntries)
-	}
-	expStrings := []string{"<apple: 5>", "<banana: 2>", "<orange: 3>"}
+	tst.AssertListEqual(t, "Entries", actualEntries, wantEntries)
+	// Entry.String
+	wantStrings := []string{"<apple: 5>", "<banana: 2>", "<orange: 3>"}
 	for i, entry := range actualEntries {
-		actualString := entry.String()
-		if actualString != expStrings[i] {
-			t.Errorf("Entry.String() = %q, want %q", actualString, expStrings[i])
-		}
+		tst.AssertEqual(t, "Entry.String", entry.String(), wantStrings[i])
 	}
-	noKeyCases := []Entry[string, bool]{
-		{"apple", false},
-		{"grape", true},
+	// Entry.Tuple
+	want1, want2 := "apple", 5
+	actual1, actual2 := wantEntries[0].Tuple()
+	tst.AssertEqual(t, "Tuple", actual1, want1)
+	tst.AssertEqual(t, "Tuple", actual2, want2)
+	// No Key
+	noKeyCases := []tst.P2W1[map[string]int, string, bool]{
+		{m, "apple", false},
+		{m, "grape", true},
 	}
-	for _, x := range noKeyCases {
-		key, want := x.Tuple()
-		actual := NoKey(m, key)
-		if actual != want {
-			t.Errorf("NoKey(%q) = %v, want %v", key, actual, want)
-		}
+	tst.AllP2W1(t, noKeyCases, "NoKey", NoKey, tst.AssertEqual)
+	// No Value
+	noValueCases := []tst.P2W1[map[string]int, int, bool]{
+		{m, 3, false},
+		{m, 5, false},
+		{m, 1, true},
+		{m, 69, true},
 	}
-	noValueCases := []Entry[int, bool]{
-		{3, false},
-		{5, false},
-		{1, true},
-		{69, true},
-	}
-	for _, x := range noValueCases {
-		value, want := x.Tuple()
-		actual := NoValue(m, value)
-		if actual != want {
-			t.Errorf("NoValue(%d) = %v, want %v", value, actual, want)
-		}
-	}
-	getCases := []Entry[string, int]{
+	tst.AllP2W1(t, noValueCases, "NoValue", NoValue, tst.AssertEqual)
+	// Map Get
+	getCases := []tst.P1W1[string, int]{
 		{"apple", 5},
 		{"zebra", 0},
 	}
 	for _, x := range getCases {
-		key, want := x.Tuple()
-		actual := m[key]
-		if actual != want {
-			t.Errorf("map[%q] = %v, want %v", key, actual, want)
-		}
+		key, want := x.P1, x.W1
+		tst.AssertEqual(t, fmt.Sprintf("map[%q]", key), m[key], want)
 	}
+	// GetOrDefault, SetDefault
 	defaultValue := 69
-	getCases = []Entry[string, int]{
+	getCases = []tst.P1W1[string, int]{
 		{"orange", 3},
 		{"cherry", defaultValue},
 	}
 	for _, x := range getCases {
-		key, want := x.Tuple()
-		actual := GetOrDefault(m, key, defaultValue)
-		if actual != want {
-			t.Errorf("GetOrDefault(%q, %v) = %v, want %v", key, defaultValue, actual, want)
-		}
+		key, want := x.P1, x.W1
+		tst.AssertEqual(t, "GetOrDefault", GetOrDefault(m, key, defaultValue), want)
 		SetDefault(m, key, defaultValue)
-		actual = m[key]
-		if actual != want {
-			t.Errorf("SetDefault(%q, %v) = %v, want %v", key, defaultValue, actual, want)
-		}
+		tst.AssertEqual(t, "SetDefault", m[key], want)
 	}
-	keyFnCases := []Entry[bool, func(string) bool]{
-		{false, func(key string) bool { return key == "apple" }},
-		{true, func(key string) bool { return key == "zebra" }},
+	// NoKeyFunc
+	keyFnCases := []tst.P2W1[map[string]int, func(string) bool, bool]{
+		{m, func(key string) bool { return key == "apple" }, false},
+		{m, func(key string) bool { return key == "zebra" }, true},
 	}
-	for _, x := range keyFnCases {
-		want, test := x.Tuple()
-		actual := NoKeyFunc(m, test)
-		if actual != want {
-			t.Errorf("NoKeyFunc = %v, want %v", actual, want)
-		}
+	tst.AllP2W1(t, keyFnCases, "NoKeyFunc", NoKeyFunc, tst.AssertEqual)
+	// No ValueFunc
+	valueFnCases := []tst.P2W1[map[string]int, func(int) bool, bool]{
+		{m, func(value int) bool { return value > 100 }, true},
+		{m, func(value int) bool { return value == 5 }, false},
 	}
-	valueFnCases := []Entry[bool, func(int) bool]{
-		{true, func(value int) bool { return value > 100 }},
-		{false, func(value int) bool { return value == 5 }},
-	}
-	for _, x := range valueFnCases {
-		want, test := x.Tuple()
-		actual := NoValueFunc(m, test)
-		if actual != want {
-			t.Errorf("NoValueFunc = %v, want %v", actual, want)
-		}
-	}
-
+	tst.AllP2W1(t, valueFnCases, "NoValueFunc", NoValueFunc, tst.AssertEqual)
+	// Filter.Entries
 	mf := Filter(m, func(key string, value int) bool { return key != "zebra" && value <= 50 })
-	actualEntries = SortedEntries(mf)
-	if slices.Equal(actualEntries, expEntries) == false {
-		t.Errorf("Filter.Entries = %v, want %v", actualEntries, expEntries)
-	}
-
-	m2 = map[string]int{
-		"cherry": 30,
-		"banana": 10,
-	}
-	expEntries = []Entry[string, int]{
+	tst.AssertListEqual(t, "Filter.Entries", SortedEntries(mf), wantEntries)
+	// Update
+	m2 = map[string]int{"cherry": 30, "banana": 10}
+	wantEntries = []Entry[string, int]{
 		{"apple", 5}, {"banana", 10}, {"cherry", 30}, {"orange", 3},
 	}
 	Update(m, m2)
-	actualEntries = SortedEntriesFunc(m, sortFn)
-	if slices.Equal(actualEntries, expEntries) == false {
-		t.Errorf("Update = %v, want %v", actualEntries, expEntries)
-	}
-
+	tst.AssertListEqual(t, "Update", SortedEntriesFunc(m, sortFn), wantEntries)
+	// Clear, IsEmpty
 	Clear(m)
-	isEmpty := IsEmpty(m)
-	if isEmpty != true {
-		t.Errorf("IsEmpty() = %t, want true", isEmpty)
-	}
+	tst.AssertEqual(t, "IsEmpty", IsEmpty(m), true)
 }
