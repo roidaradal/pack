@@ -35,3 +35,12 @@ func TestTopRowQuery(t *testing.T) {
 	// TODO: TopRowQuery.Test
 	// TODO: TopRowQuery.BuildQuery
 }
+
+func TestTopValueQuery(t *testing.T) {
+	// TODO: NewTopValueQuery
+	// TODO: TopValueQuery.OrderAsc, OrderDesc
+	// TODO: TopValueQuery.Limit
+	// TODO: TopValueQuery.Where
+	// TODO: TopValueQuery.Test
+	// TODO: TopValueQuery.BuildQuery
+}

@@ -36,6 +36,15 @@ type TopRowQuery[T any] struct {
 	reader RowReader[T]
 }
 
+// TopValueQuery selects the top N values from the table that satisfy the condition
+type TopValueQuery[T, V any] struct {
+	conditionQuery[T]
+	orderedLimit
+	typeName   string
+	columnName string
+	reader     RowReader[T]
+}
+
 // NewCountQuery creates a new CountQuery
 func NewCountQuery[T any](this *Instance, table string) *CountQuery[T] {
 	q := new(CountQuery[T])
@@ -80,10 +89,27 @@ func NewFullSelectRowQuery[T any](this *Instance, table string, reader RowReader
 func NewTopRowQuery[T any](this *Instance, table string, reader RowReader[T]) *TopRowQuery[T] {
 	q := new(TopRowQuery[T])
 	q.initializeRequired(this, table)
-	q.reader = reader
 	q.limit = 1
+	q.reader = reader
 	var item T
 	q.Columns(this, this.allColumns(item)...)
+	return q
+}
+
+// NewTopValueQuery creates a new TopValueQuery
+func NewTopValueQuery[T, V any](this *Instance, table string, fieldRef *V) *TopValueQuery[T, V] {
+	q := new(TopValueQuery[T, V])
+	q.initializeRequired(this, table)
+	q.limit = 1
+	var item T
+	q.typeName = dyn.TypeName(item)
+	columnName := this.Column(fieldRef)
+	if columnName != "" {
+		// Note: create RowReader before preparing identifier, since RowReader cannot recognized a processed column
+		q.reader = NewRowReader[T](this, columnName)
+		columnName = this.prepareIdentifier(columnName)
+	}
+	q.columnName = columnName
 	return q
 }
 
@@ -130,5 +156,16 @@ func (q *TopRowQuery[T]) BuildQuery() (string, []any) {
 	columns := strings.Join(q.columns, ", ")
 	query := "SELECT %s FROM %s WHERE %s %s"
 	query = fmt.Sprintf(query, columns, q.table, condition, q.orderLimitString())
+	return query, values
+}
+
+// BuildQuery returns the query string and parameter values of TopValueQuery
+func (q *TopValueQuery[T, V]) BuildQuery() (string, []any) {
+	condition, values, err := q.conditionQuery.preBuildCheck()
+	if err != nil || q.columnName == "" || len(q.orders) == 0 {
+		return emptyQueryValues()
+	}
+	query := "SELECT %s FROM %s WHERE %s %s"
+	query = fmt.Sprintf(query, q.columnName, q.table, condition, q.orderLimitString())
 	return query, values
 }
