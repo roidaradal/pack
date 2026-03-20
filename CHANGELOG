@@ -1,9 +1,9 @@
 v0.2.14 - Multiple Row Queries
-    - Commit:
+    x Commit: 2026-03-20 21:44
     x Refactor common query parts
     x DistinctValues Query
     x Lookup Query
-    - SelectRows Query
+    x SelectRows Query
 v0.2.13 - Single Row Queries
     x Commit: 2026-03-20 20:09
     x Count Query
