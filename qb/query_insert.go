@@ -79,7 +79,7 @@ func (q *InsertRowsQuery) BuildQuery() (string, []any) {
 		return emptyQueryValues()
 	}
 	values := make([]any, 0, numRows*numColumns)
-	columnOrder, values1 := dict.Unzip(row1)
+	columnOrder, values1 := dict.SortedUnzip(row1)
 	values = append(values, values1...)
 	for _, row := range q.rows[1:] {
 		// Ensure same column signature as first row
