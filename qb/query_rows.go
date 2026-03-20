@@ -1,0 +1,120 @@
+package qb
+
+import (
+	"fmt"
+	"strings"
+)
+
+// DistinctValuesQuery selects the distinct values for specified column that satisfies the condition
+// T = object type, V = value type
+type DistinctValuesQuery[T, V any] struct {
+	conditionQuery[T]
+	columnReader[T]
+}
+
+// LookupQuery selects two columns from a table and creates a lookup map for rows that satisfy the condition
+// T = object type, K = key type, V = value type
+type LookupQuery[T any, K comparable, V any] struct {
+	conditionQuery[T]
+	typeName    string
+	keyColumn   string
+	valueColumn string
+	reader      RowReader[T]
+}
+
+// SelectRowsQuery selects the rows from the table that satisfy the condition
+type SelectRowsQuery[T any] struct {
+	conditionQuery[T]
+	columnsReader[T]
+	orderedLimit
+	offset uint
+}
+
+// NewDistinctValuesQuery creates a new DistinctValuesQuery
+func NewDistinctValuesQuery[T, V any](this *Instance, table string, fieldRef *V) *DistinctValuesQuery[T, V] {
+	q := new(DistinctValuesQuery[T, V])
+	q.initializeOptional(this, table)
+	q.columnReader.initialize(this, this.Column(fieldRef))
+	return q
+}
+
+// NewLookupQuery creates a new LookupQuery
+func NewLookupQuery[T any, K comparable, V any](this *Instance, table string, keyFieldRef *K, valueFieldRef *V) *LookupQuery[T, K, V] {
+	q := new(LookupQuery[T, K, V])
+	q.initializeOptional(this, table)
+	columns := this.Columns(keyFieldRef, valueFieldRef)
+	if len(columns) == 2 {
+		q.keyColumn = this.prepareIdentifier(columns[0])
+		q.valueColumn = this.prepareIdentifier(columns[1])
+		q.reader = NewRowReader[T](this, columns...)
+	}
+	return q
+}
+
+// NewSelectRowsQuery creates a new SelectRowsQuery, which uses only selected columns
+func NewSelectRowsQuery[T any](this *Instance, table string, reader RowReader[T]) *SelectRowsQuery[T] {
+	q := new(SelectRowsQuery[T])
+	q.initializeOptional(this, table)
+	q.reader = reader
+	q.columns = make([]string, 0)
+	return q
+}
+
+// NewFullSelectRowsQuery creates a new SelectRowsQuery, which uses all columns
+func NewFullSelectRowsQuery[T any](this *Instance, table string, reader RowReader[T]) *SelectRowsQuery[T] {
+	q := NewSelectRowsQuery(this, table, reader)
+	q.useAllColumns(this)
+	return q
+}
+
+// Page sets the page number and batch size for a paginated SelectRowsQuery
+func (q *SelectRowsQuery[T]) Page(number, batchSize uint) {
+	q.offset = (number - 1) * batchSize
+	q.limit = batchSize
+}
+
+// BuildQuery returns the query string and parameter values of DistinctValuesQuery
+func (q *DistinctValuesQuery[T, V]) BuildQuery() (string, []any) {
+	condition, values, err := q.conditionQuery.preBuildCheck()
+	if err != nil || q.columnName == "" {
+		return emptyQueryValues()
+	}
+	query := "SELECT DISTINCT %s FROM %s WHERE %s"
+	query = fmt.Sprintf(query, q.columnName, q.table, condition)
+	return query, values
+}
+
+// BuildQuery returns the query string and parameter values of LookupQuery
+func (q *LookupQuery[T, K, V]) BuildQuery() (string, []any) {
+	condition, values, err := q.conditionQuery.preBuildCheck()
+	if err != nil || q.keyColumn == "" || q.valueColumn == "" {
+		return emptyQueryValues()
+	}
+	query := "SELECT %s, %s FROM %s WHERE %s"
+	query = fmt.Sprintf(query, q.keyColumn, q.valueColumn, q.table, condition)
+	return query, values
+}
+
+// BuildQuery returns the query string and parameter values of SelectRowsQuery
+func (q *SelectRowsQuery[T]) BuildQuery() (string, []any) {
+	condition, values, err := q.conditionQuery.preBuildCheck()
+	if err != nil || len(q.columns) == 0 {
+		return emptyQueryValues()
+	}
+	columns := strings.Join(q.columns, ", ")
+	query := "SELECT %s FROM %s WHERE %s"
+	query = fmt.Sprintf(query, columns, q.table, condition)
+
+	tail := make([]string, 0, 2)
+	orderString := q.orderString()
+	if orderString != "" {
+		tail = append(tail, fmt.Sprintf("ORDER BY %s", orderString))
+	}
+	if q.offset > 0 || q.limit > 0 {
+		tail = append(tail, fmt.Sprintf("LIMIT %d, %d", q.offset, q.limit))
+	}
+	suffix := strings.Join(tail, " ")
+	query = tryAppend(query, suffix)
+
+	return query, values
+}

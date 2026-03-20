@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/roidaradal/pack/dyn"
 )
 
 var (
@@ -81,21 +83,46 @@ func (q *conditionQuery[T]) preBuildCheck() (string, []any, error) {
 	return condition, values, err
 }
 
-// orderedLimit is an abstractQuery with order column(s) and a limit.
+// orderedLimit is a Query part with order column(s) and a limit.
 // It does not implement the BuildQuery method; it is embedded by concrete Queries for method reuse
 type orderedLimit struct {
 	orders []string
 	limit  uint
 }
 
-// columnList is an abstractQuery with a list of columns
+// columnsReader is a Query part with a list of columns, and a RowReader
 // It does not implement the BuildQuery method; it is embedded by concrete Queries for method reuse
-type columnList struct {
+type columnsReader[T any] struct {
 	columns []string
+	reader  RowReader[T]
 }
 
-// Columns sets the columns of columnList
-func (q *columnList) Columns(this *Instance, columns ...string) {
+// columnReader is a Query part with typeName, columnName, and a RowReader
+// It does not implement the BuildQuery method; it is embedded by concrete Queries for method reuse
+type columnReader[T any] struct {
+	typeName   string
+	columnName string
+	reader     RowReader[T]
+}
+
+// initialize sets the typeName and columnName, and the reader if the columnName is not blank, for columnReader
+func (q *columnReader[T]) initialize(this *Instance, columnName string) {
+	var item T
+	q.typeName = dyn.TypeName(item)
+	if columnName != "" {
+		q.columnName = this.prepareIdentifier(columnName)
+		q.reader = NewRowReader[T](this, columnName)
+	}
+}
+
+// useAllColumns sets the columns of columnsReader to all columns of the given type
+func (q *columnsReader[T]) useAllColumns(this *Instance) {
+	var item T
+	q.Columns(this, this.allColumns(item)...)
+}
+
+// Columns sets the columns of columnsReader
+func (q *columnsReader[T]) Columns(this *Instance, columns ...string) {
 	columns2 := make([]string, 0, len(columns))
 	for _, column := range columns {
 		if column == "" {
