@@ -3,8 +3,6 @@ package qb
 import (
 	"fmt"
 	"strings"
-
-	"github.com/roidaradal/pack/dyn"
 )
 
 // CountQuery counts the number of rows that satisfy the condition
@@ -16,33 +14,27 @@ type CountQuery[T any] struct {
 // Type T = object type, V = value type
 type ValueQuery[T, V any] struct {
 	conditionQuery[T]
-	typeName   string
-	columnName string
-	reader     RowReader[T]
+	columnReader[T]
 }
 
 // SelectRowQuery selects a single row from the table that satisfies the condition
 type SelectRowQuery[T any] struct {
 	conditionQuery[T]
-	columnList
-	reader RowReader[T]
+	columnsReader[T]
 }
 
 // TopRowQuery selects the top N rows from the table that satisfy the condition
 type TopRowQuery[T any] struct {
 	conditionQuery[T]
+	columnsReader[T]
 	orderedLimit
-	columnList
-	reader RowReader[T]
 }
 
 // TopValueQuery selects the top N values from the table that satisfy the condition
 type TopValueQuery[T, V any] struct {
 	conditionQuery[T]
+	columnReader[T]
 	orderedLimit
-	typeName   string
-	columnName string
-	reader     RowReader[T]
 }
 
 // NewCountQuery creates a new CountQuery
@@ -56,15 +48,7 @@ func NewCountQuery[T any](this *Instance, table string) *CountQuery[T] {
 func NewValueQuery[T, V any](this *Instance, table string, fieldRef *V) *ValueQuery[T, V] {
 	q := new(ValueQuery[T, V])
 	q.initializeRequired(this, table)
-	var item T
-	q.typeName = dyn.TypeName(item)
-	columnName := this.Column(fieldRef)
-	if columnName != "" {
-		// Note: create RowReader before preparing identifier, since RowReader cannot recognized a processed column
-		q.reader = NewRowReader[T](this, columnName)
-		columnName = this.prepareIdentifier(columnName)
-	}
-	q.columnName = columnName
+	q.columnReader.initialize(this, this.Column(fieldRef))
 	return q
 }
 
@@ -80,8 +64,7 @@ func NewSelectRowQuery[T any](this *Instance, table string, reader RowReader[T])
 // NewFullSelectRowQuery creates a new SelectRowQuery, which uses all columns
 func NewFullSelectRowQuery[T any](this *Instance, table string, reader RowReader[T]) *SelectRowQuery[T] {
 	q := NewSelectRowQuery(this, table, reader)
-	var item T
-	q.Columns(this, this.allColumns(item)...)
+	q.useAllColumns(this)
 	return q
 }
 
@@ -91,8 +74,7 @@ func NewTopRowQuery[T any](this *Instance, table string, reader RowReader[T]) *T
 	q.initializeRequired(this, table)
 	q.limit = 1
 	q.reader = reader
-	var item T
-	q.Columns(this, this.allColumns(item)...)
+	q.useAllColumns(this)
 	return q
 }
 
@@ -100,16 +82,8 @@ func NewTopRowQuery[T any](this *Instance, table string, reader RowReader[T]) *T
 func NewTopValueQuery[T, V any](this *Instance, table string, fieldRef *V) *TopValueQuery[T, V] {
 	q := new(TopValueQuery[T, V])
 	q.initializeRequired(this, table)
+	q.columnReader.initialize(this, this.Column(fieldRef))
 	q.limit = 1
-	var item T
-	q.typeName = dyn.TypeName(item)
-	columnName := this.Column(fieldRef)
-	if columnName != "" {
-		// Note: create RowReader before preparing identifier, since RowReader cannot recognized a processed column
-		q.reader = NewRowReader[T](this, columnName)
-		columnName = this.prepareIdentifier(columnName)
-	}
-	q.columnName = columnName
 	return q
 }
 
