@@ -21,8 +21,8 @@ func (i *Instance) newRowCreator(typeName string, columns ds.List[string]) creat
 		row := make(dict.Object, numColumns)
 		for _, column := range columns {
 			value, ok := i.getStructColumnValue(structRef, typeName, column)
-			if !ok {
-				continue // skip if column value not found
+			if !ok || column == "" {
+				continue // skip if column value not found or column is blank
 			}
 			row[column] = value
 		}

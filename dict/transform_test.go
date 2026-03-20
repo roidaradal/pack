@@ -22,6 +22,10 @@ func TestZip(t *testing.T) {
 	keys2, values2 := Unzip(m)
 	m2 := Zip(keys2, values2)
 	tst.AssertMapEqual(t, "Unzip.Zip", m2, m)
+	// SortedUnzip
+	keys2, values2 = SortedUnzip(m)
+	tst.AssertListEqual(t, "SortedUnzip", keys2, keys)
+	tst.AssertListEqual(t, "SortedUnzip", values2, values)
 	// Zip.Len
 	values2 = []int{1, 2}
 	m3 := Zip(keys, values2)

@@ -1,5 +1,11 @@
+v0.2.12 - Insert Query
+    x Commit: 2026-03-20 13:09
+    x InsertRow Query
+    x InsertRows Query
+    x InsertRow Query tests
+    x InsertRows Query tests
 v0.2.11 - Convert QueryBuilder Tests
-    x Commit: 20265-03-19 20:07
+    x Commit: 2026-03-19 20:07
     x Convert qb tests
 v0.2.10 - Convert Data Structures Tests
     x Commit: 2026-03-19 14:11
