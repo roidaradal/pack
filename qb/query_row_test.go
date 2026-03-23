@@ -1,12 +1,40 @@
 package qb
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/roidaradal/tst"
+)
 
 func TestCountQuery(t *testing.T) {
-	// TODO: NewCountQuery
-	// TODO: CountQuery.Where
-	// TODO: CountQuery.Test
-	// TODO: CountQuery.BuildQuery
+	type Person struct {
+		Name string
+		Age  int
+		Job  string
+	}
+	p := new(Person)
+	this := testPrelude(t, p)
+	table := "persons"
+	// NewCountQuery
+	q0 := NewCountQuery[Person](this, "")    // blank table
+	q1 := NewCountQuery[Person](this, table) // with condition
+	q2 := NewCountQuery[Person](this, table) // no condition
+	// CountQuery.Where
+	q1.Where(GreaterEqual[Person](this, &p.Age, 18))
+	// CountQuery.Test
+	testCases := []tst.P2W1[*CountQuery[Person], Person, bool]{
+		{q1, Person{"John", 20, "dev"}, true},
+		{q1, Person{"Jane", 18, "student"}, true},
+		{q1, Person{"Alice", 15, "student"}, false},
+	}
+	tst.AllP2W1(t, testCases, "CountQuery.Test", (*CountQuery[Person]).Test, tst.AssertEqual)
+	// CountQuery.BuildQuery
+	testCases2 := []tst.P1W2[*CountQuery[Person], string, []any]{
+		{q0, "", []any{}},
+		{q1, "SELECT COUNT(*) FROM `persons` WHERE `Age` >= ?", []any{18}},
+		{q2, "SELECT COUNT(*) FROM `persons` WHERE false", []any{}},
+	}
+	tst.AllP1W2(t, testCases2, "CountQuery.BuildQuery", (*CountQuery[Person]).BuildQuery, tst.AssertEqual, tst.AssertListEqual)
 }
 
 func TestValueQuery(t *testing.T) {
