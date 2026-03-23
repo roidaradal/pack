@@ -9,7 +9,9 @@ import (
 )
 
 var (
-	errEmptyTable = errors.New("empty table")
+	errEmptyQuery     = errors.New("empty query")
+	errEmptyTable     = errors.New("empty table")
+	errNoDBConnection = errors.New("no db connection")
 )
 
 // Query interface unifies all Query types:
@@ -81,6 +83,18 @@ func (q *conditionQuery[T]) preBuildCheck() (string, []any, error) {
 	err := q.baseQuery.preBuildCheck()
 	condition, values := q.condition.BuildCondition()
 	return condition, values, err
+}
+
+// preQueryCheck checks if the db connection is set and builds the Query
+func preQueryCheck(q Query, dbc DBConn) (string, []any, error) {
+	var err error = nil
+	query, values := q.BuildQuery()
+	if dbc == nil {
+		err = errNoDBConnection
+	} else if query == "" {
+		err = errEmptyQuery
+	}
+	return query, values, err
 }
 
 // orderedLimit is a Query part with order column(s) and a limit.

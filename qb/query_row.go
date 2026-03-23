@@ -175,3 +175,26 @@ func (q *SumQuery[T]) BuildQuery() (string, []any) {
 	query = fmt.Sprintf(query, columns, q.table, condition)
 	return query, values
 }
+
+// Count returns the number of rows that satisfy the CountQuery
+func (q *CountQuery[T]) Count(dbc DBConn) (int, error) {
+	query, values, err := preQueryCheck(q, dbc)
+	if err != nil {
+		return 0, err
+	}
+	count := 0
+	err = dbc.QueryRow(query, values...).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+// Exists checks if there is at least 1 row that satisfies the CountQuery
+func (q *CountQuery[T]) Exists(dbc DBConn) (bool, error) {
+	count, err := q.Count(dbc)
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}

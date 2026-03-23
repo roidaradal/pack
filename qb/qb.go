@@ -12,6 +12,14 @@ import (
 	"github.com/roidaradal/pack/str"
 )
 
+type DBConn interface {
+	QueryRow(string, ...any) DBRow
+}
+
+type DBRow interface {
+	Scan(...any) error
+}
+
 type dbType struct {
 	name string
 }

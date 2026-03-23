@@ -35,6 +35,9 @@ func TestCountQuery(t *testing.T) {
 		{q2, "SELECT COUNT(*) FROM `persons` WHERE false", []any{}},
 	}
 	tst.AllP1W2(t, testCases2, "CountQuery.BuildQuery", (*CountQuery[Person]).BuildQuery, tst.AssertEqual, tst.AssertListEqual)
+
+	// TODO: CountQuery.Count
+	// TODO: CountQuery.Exists
 }
 
 func TestValueQuery(t *testing.T) {
