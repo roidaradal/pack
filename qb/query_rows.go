@@ -30,6 +30,12 @@ type SelectRowsQuery[T any] struct {
 	offset uint
 }
 
+// GroupCountQuery gets the counts of rows grouped by a column
+type GroupCountQuery[T any, K comparable] struct {
+	conditionQuery[T]
+	groupColumn string
+}
+
 // NewDistinctValuesQuery creates a new DistinctValuesQuery
 func NewDistinctValuesQuery[T, V any](this *Instance, table string, fieldRef *V) *DistinctValuesQuery[T, V] {
 	q := new(DistinctValuesQuery[T, V])
@@ -64,6 +70,17 @@ func NewSelectRowsQuery[T any](this *Instance, table string, reader RowReader[T]
 func NewFullSelectRowsQuery[T any](this *Instance, table string, reader RowReader[T]) *SelectRowsQuery[T] {
 	q := NewSelectRowsQuery(this, table, reader)
 	q.useAllColumns(this)
+	return q
+}
+
+// NewGroupCountQuery creates a new GroupCountQuery
+func NewGroupCountQuery[T any, K comparable](this *Instance, table string, groupFieldRef *K) *GroupCountQuery[T, K] {
+	q := new(GroupCountQuery[T, K])
+	q.initializeOptional(this, table)
+	columnName := this.Column(groupFieldRef)
+	if columnName != "" {
+		q.groupColumn = this.prepareIdentifier(columnName)
+	}
 	return q
 }
 
@@ -116,5 +133,16 @@ func (q *SelectRowsQuery[T]) BuildQuery() (string, []any) {
 	suffix := strings.Join(tail, " ")
 	query = tryAppend(query, suffix)
 
+	return query, values
+}
+
+// BuildQuery returns the query string and parameter values of GroupCountQuery
+func (q *GroupCountQuery[T, K]) BuildQuery() (string, []any) {
+	condition, values, err := q.conditionQuery.preBuildCheck()
+	if err != nil || q.groupColumn == "" {
+		return emptyQueryValues()
+	}
+	query := "SELECT %s, COUNT(*) FROM %s WHERE %s GROUP BY %s"
+	query = fmt.Sprintf(query, q.groupColumn, q.table, condition, q.groupColumn)
 	return query, values
 }

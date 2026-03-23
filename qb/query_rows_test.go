@@ -185,3 +185,10 @@ func TestSelectRowsQuery(t *testing.T) {
 	}
 	tst.AllP1W1(t, testCases3, "ToString(SelectRowsQuery)", ToString, tst.AssertEqual)
 }
+
+func TestGroupCountQuery(t *testing.T) {
+	// TODO: NewGroupCountQuery
+	// TODO: GroupCountQuery.Where
+	// TODO: GroupCountQuery with no condition (optional)
+	// TODO: GroupCountQuery.BuildQuery
+}
