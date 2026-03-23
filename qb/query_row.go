@@ -255,3 +255,14 @@ func (q *TopValueQuery[T, V]) QueryValue(this *Instance, dbc db.Conn) ds.Result[
 	}
 	return getStructTypedColumnValue[V](this, new(result.Value()), q.typeName, q.columnName)
 }
+
+// Sum executes the SumQuery and returns an object with the sum values
+func (q *SumQuery[T]) Sum(dbc db.Conn) ds.Result[T] {
+	query, values, err := preQueryCheck(q, dbc)
+	if err != nil {
+		return ds.Error[T](err)
+	}
+
+	row := dbc.QueryRow(query, values...)
+	return q.reader(row)
+}

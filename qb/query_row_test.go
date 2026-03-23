@@ -344,4 +344,6 @@ func TestSumQuery(t *testing.T) {
 		{q5, "", []any{}},
 	}
 	tst.AllP1W2(t, testCases2, "SumQuery.BuildQuery", (*SumQuery[Product]).BuildQuery, tst.AssertEqual, tst.AssertListEqual)
+
+	// TODO: SumQuery.Sum
 }
