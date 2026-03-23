@@ -284,6 +284,8 @@ func TestTopValueQuery(t *testing.T) {
 		{q2, "SELECT `Age` FROM `users` WHERE `Age` > ? ORDER BY `Balance` DESC LIMIT 1", []any{10}},
 	}
 	tst.AllP1W2(t, testCases3, "TopValueQuery.BuildQuery (int)", (*TopValueQuery[User, int]).BuildQuery, tst.AssertEqual, tst.AssertListEqual)
+
+	// TODO: TopValueQuery.QueryRow
 }
 
 func TestSumQuery(t *testing.T) {

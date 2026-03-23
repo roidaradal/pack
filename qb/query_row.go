@@ -239,3 +239,19 @@ func (q *TopRowQuery[T]) QueryRow(dbc db.Conn) ds.Result[T] {
 	row := dbc.QueryRow(query, values...)
 	return q.reader(row)
 }
+
+// QueryValue executes the TopValueQuery and gets the top column value
+func (q *TopValueQuery[T, V]) QueryValue(this *Instance, dbc db.Conn) ds.Result[V] {
+	q.limit = 1 // override limit to 1
+	query, values, err := preReadCheck(q, dbc, q.reader)
+	if err != nil {
+		return ds.Error[V](err)
+	}
+
+	row := dbc.QueryRow(query, values...)
+	result := q.reader(row)
+	if result.IsError() {
+		return ds.Error[V](result.Error())
+	}
+	return getStructTypedColumnValue[V](this, new(result.Value()), q.typeName, q.columnName)
+}
