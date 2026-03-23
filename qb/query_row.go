@@ -218,7 +218,19 @@ func (q *ValueQuery[T, V]) QueryValue(this *Instance, dbc db.Conn) ds.Result[V] 
 }
 
 // QueryRow executes the SelectRowQuery and gets the row object
-func (q *SelectRowQuery[T]) QueryRow(this *Instance, dbc db.Conn) ds.Result[T] {
+func (q *SelectRowQuery[T]) QueryRow(dbc db.Conn) ds.Result[T] {
+	query, values, err := preReadCheck(q, dbc, q.reader)
+	if err != nil {
+		return ds.Error[T](err)
+	}
+
+	row := dbc.QueryRow(query, values...)
+	return q.reader(row)
+}
+
+// QueryRow executes the TopRowQuery and gets the top row object
+func (q *TopRowQuery[T]) QueryRow(dbc db.Conn) ds.Result[T] {
+	q.limit = 1 // override limit to 1
 	query, values, err := preReadCheck(q, dbc, q.reader)
 	if err != nil {
 		return ds.Error[T](err)

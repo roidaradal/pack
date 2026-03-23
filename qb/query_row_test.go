@@ -219,6 +219,8 @@ func TestTopRowQuery(t *testing.T) {
 		{q5, "", []any{}},
 	}
 	tst.AllP1W2(t, testCases2, "TopRowQuery.BuildQuery", (*TopRowQuery[User]).BuildQuery, tst.AssertEqual, tst.AssertListEqual)
+
+	// TODO: TopRowQuery.QueryRow
 }
 
 func TestTopValueQuery(t *testing.T) {
