@@ -38,10 +38,46 @@ func TestCountQuery(t *testing.T) {
 }
 
 func TestValueQuery(t *testing.T) {
-	// TODO: NewValueQuery
-	// TODO: ValueQuery.Where
-	// TODO: ValueQuery.Test
-	// TODO: ValueQuery.BuildQuery
+	type User struct {
+		ID     int
+		Name   string
+		Code   string
+		Job    string
+		Extra  string `col:"-"`
+		secret string
+	}
+	u := new(User)
+	this := testPrelude(t, u)
+	table := "users"
+	// NewValueQuery
+	q0 := NewValueQuery[User](this, "", &u.Name)      // no table
+	q1 := NewValueQuery[User](this, table, &u.Name)   // with condition
+	q2 := NewValueQuery[User](this, table, &u.Code)   // with condition
+	q3 := NewValueQuery[User](this, table, &u.Job)    //  no condition
+	q4 := NewValueQuery[User](this, table, &u.Extra)  // blank column
+	q5 := NewValueQuery[User](this, table, &u.secret) // private field
+	// ValueQuery.Where
+	q1.Where(Equal[User](this, &u.Code, "admin"))
+	q2.Where(Equal[User](this, &u.ID, 2))
+	// ValueQuery.Test
+	u1 := User{1, "Admin", "admin", "dev", "", "123"}
+	u2 := User{2, "Guest", "guest", "dev", "", "456"}
+	testCases := []tst.P2W1[*ValueQuery[User, string], User, bool]{
+		{q1, u1, true}, {q1, u2, false},
+		{q2, u1, false}, {q2, u2, true},
+		{q3, u1, false}, {q3, u2, false},
+	}
+	tst.AllP2W1(t, testCases, "ValueQuery.Test", (*ValueQuery[User, string]).Test, tst.AssertEqual)
+	// ValueQuery.BuildQuery
+	testCases2 := []tst.P1W2[*ValueQuery[User, string], string, []any]{
+		{q0, "", []any{}},
+		{q1, "SELECT `Name` FROM `users` WHERE `Code` = ?", []any{"admin"}},
+		{q2, "SELECT `Code` FROM `users` WHERE `ID` = ?", []any{2}},
+		{q3, "SELECT `Job` FROM `users` WHERE false", []any{}},
+		{q4, "", []any{}},
+		{q5, "", []any{}},
+	}
+	tst.AllP1W2(t, testCases2, "ValueQuery.BuildQuery", (*ValueQuery[User, string]).BuildQuery, tst.AssertEqual, tst.AssertListEqual)
 }
 
 func TestSelectRowQuery(t *testing.T) {
