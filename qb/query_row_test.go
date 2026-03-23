@@ -278,9 +278,59 @@ func TestTopValueQuery(t *testing.T) {
 }
 
 func TestSumQuery(t *testing.T) {
-	// TODO: NewSumQuery
-	// TODO: SumQuery.Where
-	// TODO: SumQuery without condition (optional)
-	// TODO: SumQuery.Columns
-	// TODO: SumQuery.BuildQuery
+	type Product struct {
+		ID       int
+		Price    float64
+		Quantity int
+		secret   int
+	}
+	p := new(Product)
+	this := testPrelude(t, p)
+	table := "products"
+	cols1 := this.Columns(&p.Price, &p.Quantity)
+	cols2 := this.Columns(&p.Price)
+	cols3 := this.Columns(&p.secret)
+
+	reader1 := NewRowReader[Product](this, cols1...)
+	reader2 := NewRowReader[Product](this, cols2...)
+	reader3 := NewRowReader[Product](this, cols3...)
+
+	// NewSumQuery
+	q0 := NewSumQuery[Product](this, "", reader1)    // no table
+	q1 := NewSumQuery[Product](this, table, reader1) // multiple columns
+	q2 := NewSumQuery[Product](this, table, reader2) // single column
+	q3 := NewSumQuery[Product](this, table, reader1) // no condition (optional)
+	q4 := NewSumQuery[Product](this, table, reader3) // no valid columns
+	q5 := NewSumQuery[Product](this, table, nil)     // no columns (reader columns empty)
+
+	// SumQuery.Columns
+	q1.Columns(this, cols1...)
+	q2.Columns(this, cols2...)
+	q3.Columns(this, cols1...)
+	q4.Columns(this, cols3...)
+
+	// SumQuery.Where
+	q1.Where(Greater[Product](this, &p.ID, 100))
+	q2.Where(Lesser[Product](this, &p.Price, 50.0))
+
+	// SumQuery.Test
+	p1 := Product{101, 60.0, 10, 0}
+	p2 := Product{50, 40.0, 5, 0}
+	testCases1 := []tst.P2W1[*SumQuery[Product], Product, bool]{
+		{q1, p1, true}, {q1, p2, false},
+		{q2, p1, false}, {q2, p2, true},
+		{q3, p1, true}, {q3, p2, true},
+	}
+	tst.AllP2W1(t, testCases1, "SumQuery.Test", (*SumQuery[Product]).Test, tst.AssertEqual)
+
+	// SumQuery.BuildQuery
+	testCases2 := []tst.P1W2[*SumQuery[Product], string, []any]{
+		{q0, "", []any{}},
+		{q1, "SELECT SUM(`Price`), SUM(`Quantity`) FROM `products` WHERE `ID` > ?", []any{100}},
+		{q2, "SELECT SUM(`Price`) FROM `products` WHERE `Price` < ?", []any{50.0}},
+		{q3, "SELECT SUM(`Price`), SUM(`Quantity`) FROM `products` WHERE true", []any{}},
+		{q4, "", []any{}},
+		{q5, "", []any{}},
+	}
+	tst.AllP1W2(t, testCases2, "SumQuery.BuildQuery", (*SumQuery[Product]).BuildQuery, tst.AssertEqual, tst.AssertListEqual)
 }
