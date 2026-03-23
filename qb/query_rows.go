@@ -3,6 +3,8 @@ package qb
 import (
 	"fmt"
 	"strings"
+
+	"github.com/roidaradal/pack/number"
 )
 
 // DistinctValuesQuery selects the distinct values for specified column that satisfies the condition
@@ -28,6 +30,19 @@ type SelectRowsQuery[T any] struct {
 	columnsReader[T]
 	orderedLimit
 	offset uint
+}
+
+// GroupCountQuery gets the counts of rows grouped by a column
+type GroupCountQuery[T any, K comparable] struct {
+	conditionQuery[T]
+	groupColumn string
+}
+
+// GroupSumQuery gets the sum of row columns grouped by a column
+type GroupSumQuery[T any, K comparable, V number.Type] struct {
+	conditionQuery[T]
+	groupColumn string
+	sumColumn   string
 }
 
 // NewDistinctValuesQuery creates a new DistinctValuesQuery
@@ -64,6 +79,29 @@ func NewSelectRowsQuery[T any](this *Instance, table string, reader RowReader[T]
 func NewFullSelectRowsQuery[T any](this *Instance, table string, reader RowReader[T]) *SelectRowsQuery[T] {
 	q := NewSelectRowsQuery(this, table, reader)
 	q.useAllColumns(this)
+	return q
+}
+
+// NewGroupCountQuery creates a new GroupCountQuery
+func NewGroupCountQuery[T any, K comparable](this *Instance, table string, groupFieldRef *K) *GroupCountQuery[T, K] {
+	q := new(GroupCountQuery[T, K])
+	q.initializeOptional(this, table)
+	columnName := this.Column(groupFieldRef)
+	if columnName != "" {
+		q.groupColumn = this.prepareIdentifier(columnName)
+	}
+	return q
+}
+
+// NewGroupSumQuery creates a new GroupSumQuery
+func NewGroupSumQuery[T any, K comparable, V number.Type](this *Instance, table string, groupFieldRef *K, sumFieldRef *V) *GroupSumQuery[T, K, V] {
+	q := new(GroupSumQuery[T, K, V])
+	q.initializeOptional(this, table)
+	columns := this.Columns(groupFieldRef, sumFieldRef)
+	if len(columns) == 2 {
+		q.groupColumn = this.prepareIdentifier(columns[0])
+		q.sumColumn = this.prepareIdentifier(columns[1])
+	}
 	return q
 }
 
@@ -116,5 +154,27 @@ func (q *SelectRowsQuery[T]) BuildQuery() (string, []any) {
 	suffix := strings.Join(tail, " ")
 	query = tryAppend(query, suffix)
 
+	return query, values
+}
+
+// BuildQuery returns the query string and parameter values of GroupCountQuery
+func (q *GroupCountQuery[T, K]) BuildQuery() (string, []any) {
+	condition, values, err := q.conditionQuery.preBuildCheck()
+	if err != nil || q.groupColumn == "" {
+		return emptyQueryValues()
+	}
+	query := "SELECT %s, COUNT(*) FROM %s WHERE %s GROUP BY %s"
+	query = fmt.Sprintf(query, q.groupColumn, q.table, condition, q.groupColumn)
+	return query, values
+}
+
+// BuildQuery returns the query string and parameter values of GroupSumQuery
+func (q *GroupSumQuery[T, K, V]) BuildQuery() (string, []any) {
+	condition, values, err := q.conditionQuery.preBuildCheck()
+	if err != nil || q.groupColumn == "" || q.sumColumn == "" {
+		return emptyQueryValues()
+	}
+	query := "SELECT %s, SUM(%s) FROM %s WHERE %s GROUP BY %s"
+	query = fmt.Sprintf(query, q.groupColumn, q.sumColumn, q.table, condition, q.groupColumn)
 	return query, values
 }
