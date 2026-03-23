@@ -187,8 +187,59 @@ func TestSelectRowsQuery(t *testing.T) {
 }
 
 func TestGroupCountQuery(t *testing.T) {
-	// TODO: NewGroupCountQuery
-	// TODO: GroupCountQuery.Where
-	// TODO: GroupCountQuery with no condition (optional)
-	// TODO: GroupCountQuery.BuildQuery
+	type User struct {
+		ID     int
+		Name   string
+		Age    int
+		Extra  string `col:"-"`
+		secret string
+	}
+	u := new(User)
+	this := testPrelude(t, u)
+	table := "users"
+
+	// NewGroupCountQuery
+	q0 := NewGroupCountQuery[User, string](this, "", &u.Name)        // no table
+	q1 := NewGroupCountQuery[User, string](this, table, &u.Name)     // valid
+	q2 := NewGroupCountQuery[User, int](this, table, &u.Age)         // another field
+	q3 := NewGroupCountQuery[User, string](this, table, &u.Name)     // with condition
+	q4 := NewGroupCountQuery[User, string](this, table, new(string)) // invalid field
+	q5 := NewGroupCountQuery[User, string](this, table, &u.secret)   // private field
+	q6 := NewGroupCountQuery[User, string](this, table, &u.Extra)    // blank column (skipped)
+
+	// GroupCountQuery.Where
+	q3.Where(Greater[User](this, &u.Age, 18))
+
+	// GroupCountQuery.BuildQuery
+	emptyValues := make([]any, 0)
+	testCases1 := []tst.P1W2[*GroupCountQuery[User, string], string, []any]{
+		{q0, "", emptyValues},
+		{q1, "SELECT `Name`, COUNT(*) FROM `users` WHERE true GROUP BY `Name`", emptyValues},
+		{q3, "SELECT `Name`, COUNT(*) FROM `users` WHERE `Age` > ? GROUP BY `Name`", []any{18}},
+		{q4, "", emptyValues},
+		{q5, "", emptyValues},
+		{q6, "", emptyValues},
+	}
+	tst.AllP1W2(t, testCases1, "GroupCountQuery.BuildQuery", (*GroupCountQuery[User, string]).BuildQuery, tst.AssertEqual, tst.AssertListEqual)
+
+	testCases2 := []tst.P1W2[*GroupCountQuery[User, int], string, []any]{
+		{q2, "SELECT `Age`, COUNT(*) FROM `users` WHERE true GROUP BY `Age`", emptyValues},
+	}
+	tst.AllP1W2(t, testCases2, "GroupCountQuery.BuildQuery", (*GroupCountQuery[User, int]).BuildQuery, tst.AssertEqual, tst.AssertListEqual)
+
+	// GroupCountQuery.Test
+	u1 := User{1, "Alice", 20, "", ""}
+	u2 := User{2, "Bob", 15, "", ""}
+	testCases3 := []tst.P2W1[*GroupCountQuery[User, string], User, bool]{
+		{q1, u1, true}, {q1, u2, true},
+		{q3, u1, true}, {q3, u2, false},
+	}
+	tst.AllP2W1(t, testCases3, "GroupCountQuery.Test", (*GroupCountQuery[User, string]).Test, tst.AssertEqual)
+
+	// ToString(GroupCountQuery)
+	testCases4 := []tst.P1W1[Query, string]{
+		{q1, "SELECT `Name`, COUNT(*) FROM `users` WHERE true GROUP BY `Name`"},
+		{q3, fmt.Sprintf("SELECT `Name`, COUNT(*) FROM `users` WHERE `Age` > %d GROUP BY `Name`", 18)},
+	}
+	tst.AllP1W1(t, testCases4, "ToString(GroupCountQuery)", ToString, tst.AssertEqual)
 }
