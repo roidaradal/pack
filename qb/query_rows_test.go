@@ -324,4 +324,6 @@ func TestGroupSumQuery(t *testing.T) {
 		{q3, "SELECT `Name`, SUM(`Price`) FROM `products` WHERE `Qty` > 10 GROUP BY `Name`"},
 	}
 	tst.AllP1W1(t, testCases4, "ToString(GroupSumQuery)", ToString, tst.AssertEqual)
+
+	// TODO: GroupSumQuery.GroupSum
 }

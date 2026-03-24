@@ -216,32 +216,12 @@ func (q *SelectRowsQuery[T]) Query(dbc db.Conn) ds.Result[[]T] {
 
 // GroupCount executes the GroupCountQuery and returns the map[group]count
 func (q *GroupCountQuery[T, K]) GroupCount(dbc db.Conn) ds.Result[map[K]int] {
-	query, values, err := preQueryCheck(q, dbc)
-	if err != nil {
-		return ds.Error[map[K]int](err)
-	}
+	return getGroups[K, int](dbc, q)
+}
 
-	rows, err := dbc.Query(query, values...)
-	if err != nil {
-		return ds.Error[map[K]int](err)
-	}
-	defer rows.Close()
-
-	counts := make(map[K]int)
-	for rows.Next() {
-		var key K
-		var count int
-		err = rows.Scan(&key, &count)
-		if err != nil {
-			continue
-		}
-		counts[key] = count
-	}
-	if err = rows.Err(); err != nil {
-		return ds.Error[map[K]int](err)
-	}
-
-	return ds.NewResult(counts, nil)
+// GroupSum executes the GroupSumQuery and returns the map[group]sum
+func (q *GroupSumQuery[T, K, V]) GroupSum(dbc db.Conn) ds.Result[map[K]V] {
+	return getGroups[K, V](dbc, q)
 }
 
 // Common: read rows after executing the Query
@@ -308,4 +288,34 @@ func getRows[T any](dbc db.Conn, q Query, reader RowReader[T]) ds.Result[[]T] {
 	}
 
 	return ds.NewResult(items, nil)
+}
+
+// Common: execute a GroupQuery and return map[group]V
+func getGroups[K comparable, V number.Type](dbc db.Conn, q Query) ds.Result[map[K]V] {
+	query, values, err := preQueryCheck(q, dbc)
+	if err != nil {
+		return ds.Error[map[K]V](err)
+	}
+
+	rows, err := dbc.Query(query, values...)
+	if err != nil {
+		return ds.Error[map[K]V](err)
+	}
+	defer rows.Close()
+
+	groups := make(map[K]V)
+	for rows.Next() {
+		var key K
+		var value V
+		err = rows.Scan(&key, &value)
+		if err != nil {
+			continue
+		}
+		groups[key] = value
+	}
+	if err = rows.Err(); err != nil {
+		return ds.Error[map[K]V](err)
+	}
+
+	return ds.NewResult(groups, nil)
 }
