@@ -242,23 +242,7 @@ func (q *TopRowQuery[T]) QueryRow(dbc db.Conn) ds.Result[T] {
 
 // QueryRows executes the TopRowQuery and returns the top N row objects
 func (q *TopRowQuery[T]) QueryRows(dbc db.Conn) ds.Result[[]T] {
-	query, values, err := preReadCheck(q, dbc, q.reader)
-	if err != nil {
-		return ds.Error[[]T](err)
-	}
-
-	items := make([]T, 0)
-	err = readRows(dbc, query, values, q.reader, func(item *T) {
-		if item == nil {
-			return
-		}
-		items = append(items, *item)
-	})
-	if err != nil {
-		return ds.Error[[]T](err)
-	}
-
-	return ds.NewResult(items, nil)
+	return getRows(dbc, q, q.reader)
 }
 
 // QueryValue executes the TopValueQuery and gets the top column value

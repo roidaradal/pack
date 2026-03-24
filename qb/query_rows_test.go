@@ -188,6 +188,8 @@ func TestSelectRowsQuery(t *testing.T) {
 		{q5, "SELECT `Name`, `Price` FROM `products` WHERE true"},
 	}
 	tst.AllP1W1(t, testCases3, "ToString(SelectRowsQuery)", ToString, tst.AssertEqual)
+
+	// TODO: SelectRowsQuery.Query
 }
 
 func TestGroupCountQuery(t *testing.T) {

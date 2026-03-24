@@ -209,6 +209,11 @@ func (q *LookupQuery[T, K, V]) Lookup(this *Instance, dbc db.Conn) ds.Result[map
 	return ds.NewResult(lookup, nil)
 }
 
+// Query executes the SelectRowsQuery and returns the list of rows
+func (q *SelectRowsQuery[T]) Query(dbc db.Conn) ds.Result[[]T] {
+	return getRows(dbc, q, q.reader)
+}
+
 // Common: read rows after executing the Query
 func readRows[T any](dbc db.Conn, query string, values []any, reader RowReader[T], task func(*T)) error {
 	rows, err := dbc.Query(query, values...)
@@ -252,4 +257,25 @@ func getValueList[T, V any](this *Instance, dbc db.Conn, q Query, reader RowRead
 	}
 
 	return ds.NewResult(valueList, nil)
+}
+
+// Common: get list of rows after executing the Query
+func getRows[T any](dbc db.Conn, q Query, reader RowReader[T]) ds.Result[[]T] {
+	query, values, err := preReadCheck(q, dbc, reader)
+	if err != nil {
+		return ds.Error[[]T](err)
+	}
+
+	items := make([]T, 0)
+	err = readRows(dbc, query, values, reader, func(item *T) {
+		if item == nil {
+			return
+		}
+		items = append(items, *item)
+	})
+	if err != nil {
+		return ds.Error[[]T](err)
+	}
+
+	return ds.NewResult(items, nil)
 }
