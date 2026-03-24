@@ -183,24 +183,7 @@ func (q *GroupSumQuery[T, K, V]) BuildQuery() (string, []any) {
 
 // Query executes the DistinctValuesQuery and returns the list of distinct values
 func (q *DistinctValuesQuery[T, V]) Query(this *Instance, dbc db.Conn) ds.Result[[]V] {
-	query, values, err := preReadCheck(q, dbc, q.reader)
-	if err != nil {
-		return ds.Error[[]V](err)
-	}
-
-	distinct := make([]V, 0)
-	err = readRows(dbc, query, values, q.reader, func(item *T) {
-		result := getStructTypedColumnValue[V](this, item, q.typeName, q.columnName)
-		if result.IsError() {
-			return
-		}
-		distinct = append(distinct, result.Value())
-	})
-	if err != nil {
-		return ds.Error[[]V](err)
-	}
-
-	return ds.NewResult(distinct, nil)
+	return getValueList[T, V](this, dbc, q, q.reader, q.typeName, q.columnName)
 }
 
 // Lookup executes the LookupQuery and returns the map[K]V lookup
@@ -247,4 +230,26 @@ func readRows[T any](dbc db.Conn, query string, values []any, reader RowReader[T
 	}
 
 	return nil
+}
+
+// Common: get list of values after executing the Query
+func getValueList[T, V any](this *Instance, dbc db.Conn, q Query, reader RowReader[T], typeName, columnName string) ds.Result[[]V] {
+	query, values, err := preReadCheck(q, dbc, reader)
+	if err != nil {
+		return ds.Error[[]V](err)
+	}
+
+	valueList := make([]V, 0)
+	err = readRows(dbc, query, values, reader, func(item *T) {
+		result := getStructTypedColumnValue[V](this, item, typeName, columnName)
+		if result.IsError() {
+			return
+		}
+		valueList = append(valueList, result.Value())
+	})
+	if err != nil {
+		return ds.Error[[]V](err)
+	}
+
+	return ds.NewResult(valueList, nil)
 }
