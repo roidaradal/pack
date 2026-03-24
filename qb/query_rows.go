@@ -203,6 +203,29 @@ func (q *DistinctValuesQuery[T, V]) Query(this *Instance, dbc db.Conn) ds.Result
 	return ds.NewResult(distinct, nil)
 }
 
+// Lookup executes the LookupQuery and returns the map[K]V lookup
+func (q *LookupQuery[T, K, V]) Lookup(this *Instance, dbc db.Conn) ds.Result[map[K]V] {
+	query, values, err := preReadCheck(q, dbc, q.reader)
+	if err != nil {
+		return ds.Error[map[K]V](err)
+	}
+
+	lookup := make(map[K]V)
+	err = readRows(dbc, query, values, q.reader, func(item *T) {
+		keyResult := getStructTypedColumnValue[K](this, item, q.typeName, q.keyColumn)
+		valueResult := getStructTypedColumnValue[V](this, item, q.typeName, q.valueColumn)
+		if keyResult.IsError() || valueResult.IsError() {
+			return
+		}
+		lookup[keyResult.Value()] = valueResult.Value()
+	})
+	if err != nil {
+		return ds.Error[map[K]V](err)
+	}
+
+	return ds.NewResult(lookup, nil)
+}
+
 // Common: read rows after executing the Query
 func readRows[T any](dbc db.Conn, query string, values []any, reader RowReader[T], task func(*T)) error {
 	rows, err := dbc.Query(query, values...)

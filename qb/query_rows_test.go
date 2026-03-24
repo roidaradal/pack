@@ -110,6 +110,8 @@ func TestLookupQuery(t *testing.T) {
 		{q2, "SELECT `Username`, `Age` FROM `users` WHERE true"},
 	}
 	tst.AllP1W1(t, testCases3, "ToString(LookupQuery)", ToString, tst.AssertEqual)
+
+	// TODO: LookupQuery.Lookup
 }
 
 func TestSelectRowsQuery(t *testing.T) {
