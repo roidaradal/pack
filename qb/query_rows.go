@@ -214,6 +214,36 @@ func (q *SelectRowsQuery[T]) Query(dbc db.Conn) ds.Result[[]T] {
 	return getRows(dbc, q, q.reader)
 }
 
+// GroupCount executes the GroupCountQuery and returns the map[group]count
+func (q *GroupCountQuery[T, K]) GroupCount(dbc db.Conn) ds.Result[map[K]int] {
+	query, values, err := preQueryCheck(q, dbc)
+	if err != nil {
+		return ds.Error[map[K]int](err)
+	}
+
+	rows, err := dbc.Query(query, values...)
+	if err != nil {
+		return ds.Error[map[K]int](err)
+	}
+	defer rows.Close()
+
+	counts := make(map[K]int)
+	for rows.Next() {
+		var key K
+		var count int
+		err = rows.Scan(&key, &count)
+		if err != nil {
+			continue
+		}
+		counts[key] = count
+	}
+	if err = rows.Err(); err != nil {
+		return ds.Error[map[K]int](err)
+	}
+
+	return ds.NewResult(counts, nil)
+}
+
 // Common: read rows after executing the Query
 func readRows[T any](dbc db.Conn, query string, values []any, reader RowReader[T], task func(*T)) error {
 	rows, err := dbc.Query(query, values...)

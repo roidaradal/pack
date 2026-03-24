@@ -248,6 +248,8 @@ func TestGroupCountQuery(t *testing.T) {
 		{q3, fmt.Sprintf("SELECT `Name`, COUNT(*) FROM `users` WHERE `Age` > %d GROUP BY `Name`", 18)},
 	}
 	tst.AllP1W1(t, testCases4, "ToString(GroupCountQuery)", ToString, tst.AssertEqual)
+
+	// TODO: GroupCountQuery.GroupCount
 }
 
 func TestGroupSumQuery(t *testing.T) {
