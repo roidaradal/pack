@@ -493,7 +493,48 @@ func TestTopValueQuery(t *testing.T) {
 	}
 	tst.AllP1W2(t, testCases3, "TopValueQuery.BuildQuery (int)", (*TopValueQuery[User, int]).BuildQuery, tst.AssertEqual, tst.AssertListEqual)
 
-	// TODO: TopValueQuery.QueryValue
+	// TopValueQuery.QueryValue
+	dbc := db.NewMockAdapter(tzt.NewConn[User](u1, u2, u3))
+	prep0a := func() { dbc.Conn.SetError(errMock) }
+	prep0b := func() { q1.reader = nil }
+	prep1 := func() {
+		dbc.Conn.SetError(nil)
+		dbc.Conn.PrepareRow(q1.Test, func(items []User) ([]any, error) {
+			if len(items) == 0 {
+				return nil, errNotFound
+			}
+			slices.SortFunc(items, func(u1, u2 User) int { return cmp.Compare(u1.Name, u2.Name) })
+			return []any{items[0].Name}, nil
+		})
+	}
+	getCode := func(items []User) ([]any, error) {
+		if len(items) == 0 {
+			return nil, errNotFound
+		}
+		slices.SortFunc(items, func(u1, u2 User) int { return cmp.Compare(u2.Age, u1.Age) })
+		return []any{items[0].Code}, nil
+	}
+	prep6 := func() {
+		dbc.Conn.SetError(nil)
+		dbc.Conn.PrepareRow(q6.Test, getCode)
+	}
+	prep3 := func() { dbc.Conn.PrepareRow(q3.Test, getCode) }
+
+	testCases4 := []tst.P2W2Pre[*TopValueQuery[User, string], db.Conn, string, bool]{
+		{nil, q0, dbc, "", false},      // empty query
+		{nil, q1, nil, "", false},      // no db connection
+		{prep0a, q1, dbc, "", false},   // error on query
+		{prep1, q1, dbc, "Jack", true}, // success query1
+		{prep6, q6, dbc, "john", true}, // success query6
+		{prep3, q3, dbc, "", false},    // no results
+		{prep0b, q1, dbc, "", false},   // nil reader
+	}
+	topValueQuery := func(q *TopValueQuery[User, string], dbc db.Conn) (string, bool) {
+		res := q.QueryValue(this, dbc)
+		return res.Value(), res.NotError()
+	}
+	tst.AllP2W2Pre(t, testCases4, "TopValueQuery.QueryValue", topValueQuery, tst.AssertEqual[string], tst.AssertEqual[bool])
+
 	// TODO: TopValueQuery.QueryValues
 }
 
