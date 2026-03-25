@@ -2,7 +2,11 @@ package tzt
 
 import (
 	"database/sql"
+	"errors"
+	"slices"
 )
+
+var errNotFound = errors.New("not found")
 
 type Conn[T any] struct {
 	items  []T
@@ -54,4 +58,36 @@ func (c *Conn[T]) SetError(err error) {
 func (c *Conn[T]) PrepareRow(testFn func(T) bool, rowFn func([]T) ([]any, error)) {
 	c.testFn = testFn
 	c.rowFn = rowFn
+}
+
+func PrepFn[T any](conn *Conn[T], testFn func(T) bool, rowFn func([]T) ([]any, error)) func() {
+	return func() {
+		conn.SetError(nil)
+		conn.PrepareRow(testFn, rowFn)
+	}
+}
+
+func PrepOne[T any](conn *Conn[T], testFn func(T) bool, rowFn func(T) []any) func() {
+	return func() {
+		conn.SetError(nil)
+		conn.PrepareRow(testFn, func(items []T) ([]any, error) {
+			if len(items) == 0 {
+				return nil, errNotFound
+			}
+			return rowFn(items[0]), nil
+		})
+	}
+}
+
+func PrepSortOne[T any](conn *Conn[T], testFn func(T) bool, sortFn func(T, T) int, rowFn func(T) []any) func() {
+	return func() {
+		conn.SetError(nil)
+		conn.PrepareRow(testFn, func(items []T) ([]any, error) {
+			if len(items) == 0 {
+				return nil, errNotFound
+			}
+			slices.SortFunc(items, sortFn)
+			return rowFn(items[0]), nil
+		})
+	}
 }

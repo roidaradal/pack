@@ -10,8 +10,7 @@ import (
 )
 
 var (
-	errMock     = errors.New("mock error")
-	errNotFound = errors.New("not found")
+	errMock = errors.New("mock error")
 )
 
 // Common steps for creating Instance and adding 1 type
