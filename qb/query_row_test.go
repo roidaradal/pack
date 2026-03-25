@@ -127,7 +127,7 @@ func TestValueQuery(t *testing.T) {
 	// ValueQuery.QueryValue
 	dbc := db.NewMockAdapter(tzt.NewConn[User](u1, u2))
 	prep0a := func() { dbc.Conn.SetError(errMock) }
-	prep0d := func() { q1.reader = nil }
+	prep0b := func() { q1.reader = nil }
 	prep1 := func() {
 		dbc.Conn.SetError(nil)
 		dbc.Conn.PrepareRow(q1.Test, func(items []User) ([]any, error) {
@@ -161,7 +161,7 @@ func TestValueQuery(t *testing.T) {
 		{prep1, q1, dbc, "Admin", true}, // Success query1
 		{prep2, q2, dbc, "guest", true}, // Success query2
 		{prep3, q3, dbc, "", false},     // Row not found
-		{prep0d, q1, dbc, "", false},    // nil reader
+		{prep0b, q1, dbc, "", false},    // nil reader
 	}
 	valueQuery := func(q *ValueQuery[User, string], dbc db.Conn) (string, bool) {
 		res := q.QueryValue(this, dbc)
@@ -209,6 +209,7 @@ func TestSelectRowQuery(t *testing.T) {
 	q2.Columns(this, cols2...)
 	q3.Columns(this, cols3...)
 	q4.Columns(this, cols4...)
+	q5.Columns(this, cols4...)
 	q7.Columns(this, cols4...)
 	q8.Columns(this, cols8...)
 	q9.Columns(this, cols9...)
@@ -236,7 +237,7 @@ func TestSelectRowQuery(t *testing.T) {
 		{q2, "SELECT `Name`, `Kind` FROM `companies` WHERE `Code` = ? LIMIT 1", []any{"XYZ"}},
 		{q3, "SELECT `Name`, `Code` FROM `companies` WHERE `Age` > ? LIMIT 1", []any{10}},
 		{q4, "SELECT `ID` FROM `companies` WHERE `Kind` NOT IN (?, ?) LIMIT 1", []any{"IT", "Finance"}},
-		{q5, "", []any{}},
+		{q5, "SELECT `ID` FROM `companies` WHERE false LIMIT 1", []any{}},
 		{q6, "", []any{}},
 		{q7, "SELECT `ID` FROM `companies` WHERE false LIMIT 1", []any{}},
 		{q8, "SELECT `ID` FROM `companies` WHERE false LIMIT 1", []any{}},
@@ -244,7 +245,75 @@ func TestSelectRowQuery(t *testing.T) {
 	}
 	tst.AllP1W2(t, testCases2, "SelectRowQuery.BuildQuery", (*SelectRowQuery[Company]).BuildQuery, tst.AssertEqual, tst.AssertListEqual)
 
-	// TODO: SelectRowQuery.QueryRow
+	// SelectRowQuery.QueryRow
+	var zero Company
+	dbc := db.NewMockAdapter(tzt.NewConn[Company](c1, c2, c3, c4))
+	prep0 := func() { dbc.Conn.SetError(errMock) }
+	prep1 := func() {
+		dbc.Conn.SetError(nil)
+		dbc.Conn.PrepareRow(q1.Test, func(items []Company) ([]any, error) {
+			if len(items) == 0 {
+				return nil, errNotFound
+			}
+			item := items[0]
+			return []any{item.ID, item.Name, item.Code, item.Age, item.Type}, nil
+		})
+	}
+	prep2 := func() {
+		dbc.Conn.PrepareRow(q2.Test, func(items []Company) ([]any, error) {
+			if len(items) == 0 {
+				return nil, errNotFound
+			}
+			item := items[0]
+			return []any{item.Name, item.Type}, nil
+		})
+	}
+	prep3 := func() {
+		dbc.Conn.PrepareRow(q3.Test, func(items []Company) ([]any, error) {
+			if len(items) == 0 {
+				return nil, errNotFound
+			}
+			item := items[0]
+			return []any{item.Name, item.Code}, nil
+		})
+	}
+	getID := func(items []Company) ([]any, error) {
+		if len(items) == 0 {
+			return nil, errNotFound
+		}
+		item := items[0]
+		return []any{item.ID}, nil
+	}
+	prep4 := func() {
+		dbc.Conn.PrepareRow(q4.Test, getID)
+	}
+	prep5 := func() {
+		dbc.Conn.PrepareRow(func(_ Company) bool { return false }, getID)
+	}
+
+	want1 := Company{1, "Google", "GGL", 25, "IT", "", ""}
+	want2 := Company{Name: "Unknown", Type: "Finance"}
+	want3 := Company{Name: "Google", Code: "GGL"}
+	want4 := Company{ID: 3}
+
+	testCases3 := []tst.P2W2Pre[*SelectRowQuery[Company], db.Conn, Company, bool]{
+		{nil, q0, dbc, zero, false},   // Empty query
+		{nil, q1, nil, zero, false},   // No DB connection
+		{nil, q5, dbc, zero, false},   // nil reader
+		{prep0, q1, dbc, zero, false}, // Error on query
+		{prep1, q1, dbc, want1, true}, // Success query1
+		{prep2, q2, dbc, want2, true}, // Success query2
+		{prep3, q3, dbc, want3, true}, // Success query3
+		{prep4, q4, dbc, want4, true}, // Success query4
+		{prep5, q7, dbc, zero, false}, // no condition
+		{nil, q8, dbc, zero, false},   // private column
+		{nil, q9, dbc, zero, false},   // blank column
+	}
+	selectRowQuery := func(q *SelectRowQuery[Company], dbc db.Conn) (Company, bool) {
+		res := q.QueryRow(dbc)
+		return res.Value(), res.NotError()
+	}
+	tst.AllP2W2Pre(t, testCases3, "SelectRowQuery.QueryRow", selectRowQuery, tst.AssertEqual[Company], tst.AssertEqual[bool])
 }
 
 func TestTopRowQuery(t *testing.T) {
