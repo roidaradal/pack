@@ -1,8 +1,8 @@
 v0.2.21 - Multiple Row Query Execution Tests
     - Commit: 2026-03-24 10:00
-    - DistinctValuesQuery DistinctValues tests
+    - DistinctValuesQuery Query tests
     - LookupQuery Lookup tests
-    - SelectRowsQuery SelectRows tests
+    - SelectRowsQuery Query tests
     - TopRowQuery QueryRows tests
     - TopValueQuery QueryValues tests
     - GroupCountQuery GroupCount tests
@@ -14,7 +14,7 @@ v0.2.20 - Single Row Query Execution Tests
     x SumQuery Sum tests
     x ValueQuery QueryValue tests
     x SelectRowQuery QueryRow tests
-    - TopRowQuery QueryRow tests
+    x TopRowQuery QueryRow tests
     - TopValueQuery QueryValue tests
     - Refactor prepare step
 v0.2.19 - Multiple Row Query Executions

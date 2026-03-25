@@ -1,6 +1,8 @@
 package qb
 
 import (
+	"cmp"
+	"slices"
 	"testing"
 
 	"github.com/roidaradal/pack/db"
@@ -288,7 +290,7 @@ func TestSelectRowQuery(t *testing.T) {
 		dbc.Conn.PrepareRow(q4.Test, getID)
 	}
 	prep5 := func() {
-		dbc.Conn.PrepareRow(func(_ Company) bool { return false }, getID)
+		dbc.Conn.PrepareRow(q7.Test, getID)
 	}
 
 	want1 := Company{1, "Google", "GGL", 25, "IT", "", ""}
@@ -352,7 +354,7 @@ func TestTopRowQuery(t *testing.T) {
 	q5.OrderAsc(this, this.Column(&u.Age))
 	// TopRowQuery.Where
 	q1.Where(Greater[User](this, &u.Balance, 0))
-	q2.Where(Greater[User](this, &u.Age, 10))
+	q2.Where(GreaterEqual[User](this, &u.Age, 10))
 	q5.Where(Greater[User](this, &u.Age, 0))
 	// TopRowQuery.Test
 	u1 := User{"John", "john", 20, 5.0, "x", "y"}
@@ -360,21 +362,72 @@ func TestTopRowQuery(t *testing.T) {
 	u3 := User{"Jack", "jack", 10, 15.0, "d", "r"}
 	testCases := []tst.P2W1[*TopRowQuery[User], User, bool]{
 		{q1, u1, true}, {q1, u2, false}, {q1, u3, true},
-		{q2, u1, true}, {q2, u2, false}, {q2, u3, false},
+		{q2, u1, true}, {q2, u2, false}, {q2, u3, true},
 	}
 	tst.AllP2W1(t, testCases, "TopRowQuery.Test", (*TopRowQuery[User]).Test, tst.AssertEqual)
 	// TopRowQuery.BuildQuery
 	testCases2 := []tst.P1W2[*TopRowQuery[User], string, []any]{
 		{q0, "", []any{}},
 		{q1, "SELECT `Name`, `Code`, `Age`, `Balance` FROM `users` WHERE `Balance` > ? ORDER BY `Age` DESC, `Name` ASC LIMIT 5", []any{0.0}},
-		{q2, "SELECT `Code`, `Age` FROM `users` WHERE `Age` > ? ORDER BY `Balance` DESC LIMIT 1", []any{10}},
+		{q2, "SELECT `Code`, `Age` FROM `users` WHERE `Age` >= ? ORDER BY `Balance` DESC LIMIT 1", []any{10}},
 		{q3, "SELECT `Code`, `Age` FROM `users` WHERE false ORDER BY `Balance` DESC LIMIT 1", []any{}},
 		{q4, "", []any{}},
 		{q5, "", []any{}},
 	}
 	tst.AllP1W2(t, testCases2, "TopRowQuery.BuildQuery", (*TopRowQuery[User]).BuildQuery, tst.AssertEqual, tst.AssertListEqual)
 
-	// TODO: TopRowQuery.QueryRow
+	// TopRowQuery.QueryRow
+	var zero User
+	dbc := db.NewMockAdapter(tzt.NewConn[User](u1, u2, u3))
+	prep0a := func() { dbc.Conn.SetError(errMock) }
+	prep0b := func() { q1.reader = nil }
+	prep1 := func() {
+		dbc.Conn.SetError(nil)
+		dbc.Conn.PrepareRow(q1.Test, func(items []User) ([]any, error) {
+			if len(items) == 0 {
+				return nil, errNotFound
+			}
+			slices.SortFunc(items, func(u1, u2 User) int {
+				return cmp.Compare(u2.Age, u1.Age)
+			})
+			item := items[0]
+			return []any{item.Name, item.Code, item.Age, item.Balance}, nil
+		})
+	}
+	getCodeAge := func(items []User) ([]any, error) {
+		if len(items) == 0 {
+			return nil, errNotFound
+		}
+		slices.SortFunc(items, func(u1, u2 User) int {
+			return cmp.Compare(u2.Balance, u1.Balance)
+		})
+		item := items[0]
+		return []any{item.Code, item.Age}, nil
+	}
+	prep2 := func() {
+		dbc.Conn.PrepareRow(q2.Test, getCodeAge)
+	}
+	prep3 := func() {
+		dbc.Conn.PrepareRow(q3.Test, getCodeAge)
+	}
+	want1 := User{Name: "John", Code: "john", Age: 20, Balance: 5.0}
+	want2 := User{Code: "jack", Age: 10}
+
+	testCases3 := []tst.P2W2Pre[*TopRowQuery[User], db.Conn, User, bool]{
+		{nil, q0, dbc, zero, false},    // empty query
+		{nil, q1, nil, zero, false},    // no DB connection
+		{prep0a, q1, dbc, zero, false}, // Error on query
+		{prep1, q1, dbc, want1, true},  // Success query1
+		{prep2, q2, dbc, want2, true},  // Success query2
+		{prep3, q3, dbc, zero, false},  // No condition
+		{prep0b, q1, dbc, zero, false}, // Nil reader
+	}
+	topRowQuery := func(q *TopRowQuery[User], dbc db.Conn) (User, bool) {
+		res := q.QueryRow(dbc)
+		return res.Value(), res.NotError()
+	}
+	tst.AllP2W2Pre(t, testCases3, "TopRowQuery.QueryRow", topRowQuery, tst.AssertEqual[User], tst.AssertEqual[bool])
+
 	// TODO: TopRowQuery.QueryRows
 }
 
