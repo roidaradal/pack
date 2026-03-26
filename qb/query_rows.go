@@ -238,11 +238,10 @@ func readRows[T any](dbc db.Conn, query string, values []any, reader RowReader[T
 
 	for rows.Next() {
 		result := reader(rows)
-		if result.IsError() {
-			continue
+		if result.NotError() {
+			item := new(result.Value())
+			task(item)
 		}
-		item := new(result.Value())
-		task(item)
 	}
 	if err = rows.Err(); err != nil {
 		return err
@@ -283,10 +282,9 @@ func getRows[T any](dbc db.Conn, q Query, reader RowReader[T]) ds.Result[[]T] {
 
 	items := make([]T, 0)
 	err = readRows(dbc, query, values, reader, func(item *T) {
-		if item == nil {
-			return
+		if item != nil {
+			items = append(items, *item)
 		}
-		items = append(items, *item)
 	})
 	if err != nil {
 		return ds.Error[[]T](err)
@@ -313,10 +311,9 @@ func getGroups[K comparable, V number.Type](dbc db.Conn, q Query) ds.Result[map[
 		var key K
 		var value V
 		err = rows.Scan(&key, &value)
-		if err != nil {
-			continue
+		if err == nil {
+			groups[key] = value
 		}
-		groups[key] = value
 	}
 	if err = rows.Err(); err != nil {
 		return ds.Error[map[K]V](err)

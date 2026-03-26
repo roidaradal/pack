@@ -63,6 +63,7 @@ func TestDistinctValuesQuery(t *testing.T) {
 	tst.AllP1W1(t, testCases3, "ToString(DistinctValuesQuery)", ToString, tst.AssertEqual)
 
 	// DistinctValuesQuery.Query
+	empty := make([]string, 0)
 	dbc := db.NewMockAdapter(tst.NewConn(u1, u2))
 	prep0a := func() { dbc.Conn.SetError(errMock) }
 	prep0b := func() { q1.reader = nil }
@@ -70,15 +71,17 @@ func TestDistinctValuesQuery(t *testing.T) {
 	prep1 := dbc.Conn.PrepRows(q1.Test, getUsername)
 	prep2 := dbc.Conn.PrepRows(q2.Test, getUsername)
 	prep3 := dbc.Conn.PrepRows(q7.Test, getUsername)
+	prep4 := func() { prep2(); q2.typeName = "" }
 
 	testCases4 := []tst.P2W2Pre[*DistinctValuesQuery[User, string], db.Conn, []string, bool]{
 		{nil, q3, dbc, nil, false},                       // empty query
 		{nil, q1, nil, nil, false},                       // no db connection
 		{prep1, q1, dbc, []string{"Alice"}, true},        // success query1
 		{prep2, q2, dbc, []string{"Alice", "Bob"}, true}, // success query2
-		{prep3, q7, dbc, []string{}, true},               // empty rows
+		{prep3, q7, dbc, empty, true},                    // empty rows
 		{prep0a, q1, dbc, nil, false},                    // error on query
 		{prep0b, q1, dbc, nil, false},                    // nil reader
+		{prep4, q2, dbc, empty, true},                    // removed typeName, should have empty result
 	}
 	distinctValuesQuery := func(q *DistinctValuesQuery[User, string], dbc db.Conn) ([]string, bool) {
 		res := q.Query(this, dbc)
@@ -148,11 +151,13 @@ func TestLookupQuery(t *testing.T) {
 	// LookupQuery.Lookup
 	dbc := db.NewMockAdapter(tst.NewConn(u1, u2))
 	prep0a := func() { dbc.Conn.SetError(errMock) }
-	prep0b := func() { q1.reader = nil }
 	getUsernameAge := func(x User) []any { return []any{x.Username, x.Age} }
 	prep1 := dbc.Conn.PrepRows(q1.Test, getUsernameAge)
 	prep2 := dbc.Conn.PrepRows(q2.Test, getUsernameAge)
 	prep3 := dbc.Conn.PrepRows(q0.Test, getUsernameAge)
+	prep4 := func() { prep2(); q2.typeName = "" }
+	prep5 := dbc.Conn.PrepRowsErr(q1.Test, getUsernameAge, errMock)
+	prep6 := func() { prep1(); q1.reader = nil }
 	want1 := map[string]int{"Bob": 20}
 	want2 := map[string]int{"Alice": 18, "Bob": 20}
 	want3 := map[string]int{}
@@ -160,11 +165,13 @@ func TestLookupQuery(t *testing.T) {
 	testCases5 := []tst.P2W2Pre[*LookupQuery[User, string, int], db.Conn, map[string]int, bool]{
 		{nil, q3, dbc, nil, false},    // empty query
 		{nil, q1, dbc, nil, false},    // no db connection
+		{prep0a, q1, dbc, nil, false}, // error on query
 		{prep1, q1, dbc, want1, true}, // success query1
 		{prep2, q2, dbc, want2, true}, // success query2
-		{prep3, q0, dbc, want3, true}, // empty results
-		{prep0a, q1, dbc, nil, false}, // error on query
-		{prep0b, q1, dbc, nil, false}, // nil reader
+		{prep3, q0, dbc, want3, true}, // empty results,
+		{prep4, q2, dbc, want3, true}, // removed typeName, should have error in getting key/value
+		{prep5, q1, dbc, nil, false},  // error on row reader
+		{prep6, q1, dbc, nil, false},  // nil reader
 	}
 	lookupQuery := func(q *LookupQuery[User, string, int], dbc db.Conn) (map[string]int, bool) {
 		res := q.Lookup(this, dbc)
@@ -365,6 +372,7 @@ func TestGroupCountQuery(t *testing.T) {
 	prep1 := dbc.Conn.PrepGroup(q1.Test, groupByName)
 	prep3 := dbc.Conn.PrepGroup(q3.Test, groupByName)
 	prep7 := dbc.Conn.PrepGroup(q7.Test, groupByName)
+	prep2 := dbc.Conn.PrepGroupErr(q1.Test, groupByName, errMock)
 	want1 := map[string]int{"Alice": 2, "Bob": 1, "Cat": 1}
 	want3 := map[string]int{"Alice": 1, "Cat": 1}
 	want7 := make(map[string]int)
@@ -376,6 +384,7 @@ func TestGroupCountQuery(t *testing.T) {
 		{prep1, q1, dbc, want1, true}, // success query1
 		{prep3, q3, dbc, want3, true}, // success query3
 		{prep7, q7, dbc, want7, true}, // empty results
+		{prep2, q1, dbc, nil, false},  // error after row scan
 	}
 	groupCountQuery := func(q *GroupCountQuery[User, string], dbc db.Conn) (map[string]int, bool) {
 		res := q.GroupCount(dbc)
