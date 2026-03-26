@@ -6,6 +6,7 @@ import (
 
 	"github.com/roidaradal/pack/db"
 	"github.com/roidaradal/pack/ds"
+	"github.com/roidaradal/pack/dyn"
 	"github.com/roidaradal/pack/number"
 )
 
@@ -65,6 +66,8 @@ func NewLookupQuery[T any, K comparable, V any](this *Instance, table string, ke
 		q.valueColumn = this.prepareIdentifier(columns[1])
 		q.reader = NewRowReader[T](this, columns...)
 	}
+	var item T
+	q.typeName = dyn.TypeName(item)
 	return q
 }
 
@@ -194,9 +197,10 @@ func (q *LookupQuery[T, K, V]) Lookup(this *Instance, dbc db.Conn) ds.Result[map
 	}
 
 	lookup := make(map[K]V)
+	keyColumn, valueColumn := this.dbType.rawIdentifier(q.keyColumn), this.dbType.rawIdentifier(q.valueColumn)
 	err = readRows(dbc, query, values, q.reader, func(item *T) {
-		keyResult := getStructTypedColumnValue[K](this, item, q.typeName, q.keyColumn)
-		valueResult := getStructTypedColumnValue[V](this, item, q.typeName, q.valueColumn)
+		keyResult := getStructTypedColumnValue[K](this, item, q.typeName, keyColumn)
+		valueResult := getStructTypedColumnValue[V](this, item, q.typeName, valueColumn)
 		if keyResult.IsError() || valueResult.IsError() {
 			return
 		}
@@ -234,11 +238,10 @@ func readRows[T any](dbc db.Conn, query string, values []any, reader RowReader[T
 
 	for rows.Next() {
 		result := reader(rows)
-		if result.IsError() {
-			continue
+		if result.NotError() {
+			item := new(result.Value())
+			task(item)
 		}
-		item := new(result.Value())
-		task(item)
 	}
 	if err = rows.Err(); err != nil {
 		return err
@@ -255,6 +258,7 @@ func getValueList[T, V any](this *Instance, dbc db.Conn, q Query, reader RowRead
 	}
 
 	valueList := make([]V, 0)
+	columnName = this.dbType.rawIdentifier(columnName)
 	err = readRows(dbc, query, values, reader, func(item *T) {
 		result := getStructTypedColumnValue[V](this, item, typeName, columnName)
 		if result.IsError() {
@@ -278,10 +282,9 @@ func getRows[T any](dbc db.Conn, q Query, reader RowReader[T]) ds.Result[[]T] {
 
 	items := make([]T, 0)
 	err = readRows(dbc, query, values, reader, func(item *T) {
-		if item == nil {
-			return
+		if item != nil {
+			items = append(items, *item)
 		}
-		items = append(items, *item)
 	})
 	if err != nil {
 		return ds.Error[[]T](err)
@@ -308,10 +311,9 @@ func getGroups[K comparable, V number.Type](dbc db.Conn, q Query) ds.Result[map[
 		var key K
 		var value V
 		err = rows.Scan(&key, &value)
-		if err != nil {
-			continue
+		if err == nil {
+			groups[key] = value
 		}
-		groups[key] = value
 	}
 	if err = rows.Err(); err != nil {
 		return ds.Error[map[K]V](err)

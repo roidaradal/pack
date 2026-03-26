@@ -48,8 +48,8 @@ func TestCountQuery(t *testing.T) {
 		return []any{len(items)}, nil
 	}
 	prep0 := func() { dbc.Conn.SetError(errMock) }
-	prep1 := dbc.Conn.Prep(q1.Test, countFn)
-	prep2 := dbc.Conn.Prep(q2.Test, countFn)
+	prep1 := dbc.Conn.PrepRow(q1.Test, countFn)
+	prep2 := dbc.Conn.PrepRow(q2.Test, countFn)
 
 	testCases3 := []tst.P2W2Pre[*CountQuery[Person], db.Conn, int, bool]{
 		{nil, q0, dbc, 0, false},   // Empty query
@@ -321,22 +321,23 @@ func TestTopRowQuery(t *testing.T) {
 	prep0b := func() { q1.reader = nil }
 	sortAgeDesc := func(x1, x2 User) int { return cmp.Compare(x2.Age, x1.Age) }
 	getAllColumns := func(x User) []any { return []any{x.Name, x.Code, x.Age, x.Balance} }
-	prep1 := dbc.Conn.PrepSortOne(q1.Test, sortAgeDesc, getAllColumns)
+	prep1 := dbc.Conn.PrepSortOne(q1.Test, getAllColumns, sortAgeDesc)
 	sortBalanceDesc := func(x1, x2 User) int { return cmp.Compare(x2.Balance, x1.Balance) }
 	getCodeAge := func(x User) []any { return []any{x.Code, x.Age} }
-	prep2 := dbc.Conn.PrepSortOne(q2.Test, sortBalanceDesc, getCodeAge)
-	prep3 := dbc.Conn.PrepSortOne(q3.Test, sortBalanceDesc, getCodeAge)
+	prep2 := dbc.Conn.PrepSortOne(q2.Test, getCodeAge, sortBalanceDesc)
+	prep3 := dbc.Conn.PrepSortOne(q3.Test, getCodeAge, sortBalanceDesc)
 
 	want1 := User{Name: "John", Code: "john", Age: 20, Balance: 5.0}
 	want2 := User{Code: "jack", Age: 10}
 
+	reader := q1.reader
 	testCases3 := []tst.P2W2Pre[*TopRowQuery[User], db.Conn, User, bool]{
 		{nil, q0, dbc, zero, false},    // empty query
 		{nil, q1, nil, zero, false},    // no DB connection
-		{prep0a, q1, dbc, zero, false}, // Error on query
 		{prep1, q1, dbc, want1, true},  // Success query1
 		{prep2, q2, dbc, want2, true},  // Success query2
 		{prep3, q3, dbc, zero, false},  // No condition
+		{prep0a, q1, dbc, zero, false}, // Error on query
 		{prep0b, q1, dbc, zero, false}, // Nil reader
 	}
 	topRowQuery := func(q *TopRowQuery[User], dbc db.Conn) (User, bool) {
@@ -344,8 +345,29 @@ func TestTopRowQuery(t *testing.T) {
 		return res.Value(), res.NotError()
 	}
 	tst.AllP2W2Pre(t, testCases3, "TopRowQuery.QueryRow", topRowQuery, tst.AssertEqual[User], tst.AssertEqual[bool])
+	q1.reader = reader
 
-	// TODO: TopRowQuery.QueryRows
+	// TopRowQuery.QueryRows
+	prep1b := dbc.Conn.PrepSortRows(q1.Test, getAllColumns, sortAgeDesc, 5)
+	prep2b := dbc.Conn.PrepSortRows(q2.Test, getCodeAge, sortBalanceDesc, 1)
+	prep3b := dbc.Conn.PrepSortRows(q3.Test, getCodeAge, sortBalanceDesc, 1)
+	want1b := []User{want1, {Name: "Jack", Code: "jack", Age: 10, Balance: 15.0}}
+	want2b := []User{want2}
+	want3b := make([]User, 0)
+	testCases4 := []tst.P2W2Pre[*TopRowQuery[User], db.Conn, []User, bool]{
+		{nil, q0, dbc, nil, false},      // empty query
+		{nil, q1, nil, nil, false},      // no DB connection
+		{prep1b, q1, dbc, want1b, true}, // success query1
+		{prep2b, q2, dbc, want2b, true}, // success query2
+		{prep3b, q3, dbc, want3b, true}, // empty results
+		{prep0a, q1, dbc, nil, false},   // Error on query
+		{prep0b, q1, dbc, nil, false},   // Nil reader
+	}
+	topRowsQuery := func(q *TopRowQuery[User], dbc db.Conn) ([]User, bool) {
+		res := q.QueryRows(dbc)
+		return res.Value(), res.NotError()
+	}
+	tst.AllP2W2Pre(t, testCases4, "TopRowQuery.QueryRows", topRowsQuery, tst.AssertListEqual, tst.AssertEqual)
 }
 
 func TestTopValueQuery(t *testing.T) {
@@ -416,19 +438,21 @@ func TestTopValueQuery(t *testing.T) {
 	prep0b := func() { q1.reader = nil }
 	sortNameAsc := func(x1, x2 User) int { return cmp.Compare(x1.Name, x2.Name) }
 	getName := func(x User) []any { return []any{x.Name} }
-	prep1 := dbc.Conn.PrepSortOne(q1.Test, sortNameAsc, getName)
+	prep1 := dbc.Conn.PrepSortOne(q1.Test, getName, sortNameAsc)
 	sortAgeDesc := func(x1, x2 User) int { return cmp.Compare(x2.Age, x1.Age) }
+	sortAgeAsc := func(x1, x2 User) int { return cmp.Compare(x1.Age, x2.Age) }
 	getCode := func(x User) []any { return []any{x.Code} }
-	prep6 := dbc.Conn.PrepSortOne(q6.Test, sortAgeDesc, getCode)
-	prep3 := dbc.Conn.PrepSortOne(q3.Test, sortAgeDesc, getCode)
+	prep6 := dbc.Conn.PrepSortOne(q6.Test, getCode, sortAgeDesc)
+	prep3 := dbc.Conn.PrepSortOne(q3.Test, getCode, sortAgeAsc)
 
+	reader := q1.reader
 	testCases4 := []tst.P2W2Pre[*TopValueQuery[User, string], db.Conn, string, bool]{
 		{nil, q0, dbc, "", false},      // empty query
 		{nil, q1, nil, "", false},      // no db connection
-		{prep0a, q1, dbc, "", false},   // error on query
 		{prep1, q1, dbc, "Jack", true}, // success query1
 		{prep6, q6, dbc, "john", true}, // success query6
 		{prep3, q3, dbc, "", false},    // no results
+		{prep0a, q1, dbc, "", false},   // error on query
 		{prep0b, q1, dbc, "", false},   // nil reader
 	}
 	topValueQuery := func(q *TopValueQuery[User, string], dbc db.Conn) (string, bool) {
@@ -436,8 +460,31 @@ func TestTopValueQuery(t *testing.T) {
 		return res.Value(), res.NotError()
 	}
 	tst.AllP2W2Pre(t, testCases4, "TopValueQuery.QueryValue", topValueQuery, tst.AssertEqual[string], tst.AssertEqual[bool])
+	q1.reader = reader
 
-	// TODO: TopValueQuery.QueryValues
+	// TopValueQuery.QueryValues
+	prep1b := dbc.Conn.PrepSortRows(q1.Test, getName, sortNameAsc, 3)
+	prep6b := dbc.Conn.PrepSortRows(q6.Test, getCode, sortAgeDesc, 1)
+	prep3b := dbc.Conn.PrepSortRows(q3.Test, getCode, sortAgeAsc, 1)
+	want1 := []string{"Jack", "John"}
+	want6 := []string{"john"}
+	want3 := make([]string, 0)
+
+	testCases5 := []tst.P2W2Pre[*TopValueQuery[User, string], db.Conn, []string, bool]{
+		{nil, q0, dbc, nil, false},     // empty query
+		{nil, q1, nil, nil, false},     // no db connection
+		{prep1b, q1, dbc, want1, true}, // success query1
+		{prep6b, q6, dbc, want6, true}, // success query6
+		{prep3b, q3, dbc, want3, true}, // empty results
+		{prep0a, q1, dbc, nil, false},  // error on query
+		{prep0b, q1, dbc, nil, false},  // nil reader
+
+	}
+	topValuesQuery := func(q *TopValueQuery[User, string], dbc db.Conn) ([]string, bool) {
+		res := q.QueryValues(this, dbc)
+		return res.Value(), res.NotError()
+	}
+	tst.AllP2W2Pre(t, testCases5, "TopValueQuery.QueryValues", topValuesQuery, tst.AssertListEqual, tst.AssertEqual)
 }
 
 func TestSumQuery(t *testing.T) {
@@ -514,9 +561,9 @@ func TestSumQuery(t *testing.T) {
 		return []any{sumPrice, sumQty}, nil
 	}
 	prep0 := func() { dbc.Conn.SetError(errMock) }
-	prep1 := dbc.Conn.Prep(q1.Test, getPriceQty)
-	prep3 := dbc.Conn.Prep(q3.Test, getPriceQty)
-	prep2 := dbc.Conn.Prep(q2.Test, func(items []Product) ([]any, error) {
+	prep1 := dbc.Conn.PrepRow(q1.Test, getPriceQty)
+	prep3 := dbc.Conn.PrepRow(q3.Test, getPriceQty)
+	prep2 := dbc.Conn.PrepRow(q2.Test, func(items []Product) ([]any, error) {
 		sumPrice := list.SumOf(items, func(item Product) float64 { return item.Price })
 		return []any{sumPrice}, nil
 	})
