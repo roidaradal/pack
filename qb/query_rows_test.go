@@ -304,9 +304,11 @@ func TestGroupCountQuery(t *testing.T) {
 	q4 := NewGroupCountQuery[User, string](this, table, new(string)) // invalid field
 	q5 := NewGroupCountQuery[User, string](this, table, &u.secret)   // private field
 	q6 := NewGroupCountQuery[User, string](this, table, &u.Extra)    // blank column (skipped)
+	q7 := NewGroupCountQuery[User, string](this, table, &u.Name)     // no results
 
 	// GroupCountQuery.Where
 	q3.Where(Greater[User](this, &u.Age, 18))
+	q7.Where(Greater[User](this, &u.ID, 10))
 
 	// GroupCountQuery.BuildQuery
 	emptyValues := make([]any, 0)
@@ -317,6 +319,7 @@ func TestGroupCountQuery(t *testing.T) {
 		{q4, "", emptyValues},
 		{q5, "", emptyValues},
 		{q6, "", emptyValues},
+		{q7, "SELECT `Name`, COUNT(*) FROM `users` WHERE `ID` > ? GROUP BY `Name`", []any{10}},
 	}
 	tst.AllP1W2(t, testCases1, "GroupCountQuery.BuildQuery", (*GroupCountQuery[User, string]).BuildQuery, tst.AssertEqual, tst.AssertListEqual)
 
@@ -331,17 +334,54 @@ func TestGroupCountQuery(t *testing.T) {
 	testCases3 := []tst.P2W1[*GroupCountQuery[User, string], User, bool]{
 		{q1, u1, true}, {q1, u2, true},
 		{q3, u1, true}, {q3, u2, false},
+		{q7, u1, false}, {q7, u2, false},
 	}
 	tst.AllP2W1(t, testCases3, "GroupCountQuery.Test", (*GroupCountQuery[User, string]).Test, tst.AssertEqual)
 
 	// ToString(GroupCountQuery)
 	testCases4 := []tst.P1W1[Query, string]{
 		{q1, "SELECT `Name`, COUNT(*) FROM `users` WHERE true GROUP BY `Name`"},
-		{q3, fmt.Sprintf("SELECT `Name`, COUNT(*) FROM `users` WHERE `Age` > %d GROUP BY `Name`", 18)},
+		{q3, "SELECT `Name`, COUNT(*) FROM `users` WHERE `Age` > 18 GROUP BY `Name`"},
+		{q7, "SELECT `Name`, COUNT(*) FROM `users` WHERE `ID` > 10 GROUP BY `Name`"},
 	}
 	tst.AllP1W1(t, testCases4, "ToString(GroupCountQuery)", ToString, tst.AssertEqual)
 
-	// TODO: GroupCountQuery.GroupCount
+	// GroupCountQuery.GroupCount
+	u3 := User{3, "Alice", 5, "", ""}
+	u4 := User{4, "Cat", 22, "", ""}
+	dbc := db.NewMockAdapter(tst.NewConn(u1, u2, u3, u4))
+	groupByName := func(users []User) [][]any {
+		counts := make(map[string]int)
+		for _, user := range users {
+			counts[user.Name] += 1
+		}
+		values := make([][]any, 0, len(counts))
+		for name, count := range counts {
+			values = append(values, []any{name, count})
+		}
+		return values
+	}
+	prep0 := func() { dbc.Conn.SetError(errMock) }
+	prep1 := dbc.Conn.PrepGroup(q1.Test, groupByName)
+	prep3 := dbc.Conn.PrepGroup(q3.Test, groupByName)
+	prep7 := dbc.Conn.PrepGroup(q7.Test, groupByName)
+	want1 := map[string]int{"Alice": 2, "Bob": 1, "Cat": 1}
+	want3 := map[string]int{"Alice": 1, "Cat": 1}
+	want7 := make(map[string]int)
+
+	testCases5 := []tst.P2W2Pre[*GroupCountQuery[User, string], db.Conn, map[string]int, bool]{
+		{nil, q0, dbc, nil, false},    // empty query
+		{nil, q1, nil, nil, false},    // no DB connection,
+		{prep0, q1, dbc, nil, false},  // error on query
+		{prep1, q1, dbc, want1, true}, // success query1
+		{prep3, q3, dbc, want3, true}, // success query3
+		{prep7, q7, dbc, want7, true}, // empty results
+	}
+	groupCountQuery := func(q *GroupCountQuery[User, string], dbc db.Conn) (map[string]int, bool) {
+		res := q.GroupCount(dbc)
+		return res.Value(), res.NotError()
+	}
+	tst.AllP2W2Pre(t, testCases5, "GroupCountQuery.GroupCount", groupCountQuery, tst.AssertMapEqual, tst.AssertEqual)
 }
 
 func TestGroupSumQuery(t *testing.T) {
