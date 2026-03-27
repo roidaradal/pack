@@ -87,3 +87,10 @@ func IntToUint[I number.Int](i I) uint {
 func UintToInt[I number.Uint](i I) int {
 	return int(i)
 }
+
+// NotFn creates a function that negates the result of another function
+func NotFn[T any](fn func(T) bool) func(T) bool {
+	return func(x T) bool {
+		return !fn(x)
+	}
+}

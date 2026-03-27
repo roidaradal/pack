@@ -209,3 +209,20 @@ func TestUintToInt(t *testing.T) {
 	}
 	tst.AllP1W1(t, testCases, "UintToInt", UintToInt, tst.AssertEqual)
 }
+
+func TestNotFn(t *testing.T) {
+	fn1 := func(x int) bool { return x > 0 }
+	fn2 := func(x int) bool { return x == 5 }
+	fn1b := NotFn(fn1)
+	fn2b := NotFn(fn2)
+	testCases := []tst.P2W1[func(int) bool, int, bool]{
+		{fn1, 1, true}, {fn1, 2, true}, {fn1, 0, false}, {fn1, -1, false},
+		{fn2, 1, false}, {fn2, 2, false}, {fn2, 5, true}, {fn2, 0, false},
+		{fn1b, 1, false}, {fn1b, 2, false}, {fn1b, 0, true}, {fn1b, -1, true},
+		{fn2b, 1, true}, {fn2b, 2, true}, {fn2b, 5, false}, {fn2b, 0, true},
+	}
+	checkFn := func(fn func(int) bool, x int) bool {
+		return fn(x)
+	}
+	tst.AllP2W1(t, testCases, "NotFn", checkFn, tst.AssertEqual)
+}

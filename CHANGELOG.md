@@ -1,14 +1,15 @@
+## v0.2.23 - Transaction Tests
+  * Commit:
+  - Query Execution tests
+  - Package db tests
 ## v0.2.22 - Query Execution Tests
   - Commit:
   * ResultChecker functions
   * Query Execution functions
-  - Add db.TxAdapter
-  - DeleteQuery Execute tests
+  * DeleteQuery Execute tests
   - InsertRowQuery Execute tests
   - InsertRowsQuery Execute tests
   - UpdateQuery Execute tests
-  - Query Execution tests
-  - Package db tests
 ## v0.2.21 - Multiple Row Query Execution Tests
   * Commit: 2026-03-26 14:57
   * DistinctValuesQuery Query tests

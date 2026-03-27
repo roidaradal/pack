@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/roidaradal/pack/conv"
+	"github.com/roidaradal/pack/db"
 	"github.com/roidaradal/pack/dict"
 	"github.com/roidaradal/pack/ds"
+	"github.com/roidaradal/pack/list"
 	"github.com/roidaradal/tst"
 )
 
@@ -78,6 +81,72 @@ func TestDeleteQuery(t *testing.T) {
 		{q7, "DELETE FROM `users` WHERE `Username` = ?", []any{"admin"}},
 	}
 	tst.AllP1W2(t, testCases1, "DeleteQuery.BuildQuery", (*DeleteQuery[User]).BuildQuery, tst.AssertEqual, tst.AssertListEqual)
+}
+
+func TestDeleteExec(t *testing.T) {
+	type User struct {
+		ID   uint
+		Name string
+		Job  string
+	}
+	table := "users"
+	u := new(User)
+	this := testPrelude(t, u)
+	u1, u2, u3 := User{1, "Alice", "Dev"}, User{2, "Bob", "Dev"}, User{3, "Charlie", "Dev"}
+	u4, u5, u6 := User{4, "Dave", "QA"}, User{5, "Eve", "QA"}, User{6, "Frank", "Sales"}
+	u7, u8, u9 := User{7, "Grace", "Sales"}, User{8, "Harry", "UX"}, User{9, "Ivy", "Admin"}
+	users := []User{u1, u2, u3, u4, u5, u6, u7, u8, u9}
+
+	q0 := NewDeleteQuery[User](this, "")
+	q1 := NewDeleteQuery[User](this, table)
+	q1.Where(Equal[User](this, &u.ID, 4))
+	q2 := NewDeleteQuery[User](this, table)
+	q2.Where(In[User](this, &u.Job, []string{"Sales", "UX"}))
+	q3 := NewDeleteQuery[User](this, table)
+	q3.Where(Or[User](
+		Equal[User](this, &u.Job, "Dev"),
+		Equal[User](this, &u.Name, "Ivy"),
+	))
+	q4 := NewDeleteQuery[User](this, table)
+	q4.Where(Greater[User](this, &u.ID, 10))
+
+	execFn := func(test func(User) bool) func([]User) ([]User, error) {
+		test = conv.NotFn(test)
+		return func(items []User) ([]User, error) {
+			return list.Filter(items, test), nil
+		}
+	}
+	newResult := func(test func(User) bool) *tst.Result {
+		return tst.NewResult(list.CountFunc(users, test), 0, nil)
+	}
+
+	dbc := db.NewMockAdapter(tst.NewConn(users...))
+	prep1 := dbc.Conn.PrepExecReset(execFn(q1.Test), newResult(q1.Test), users...)
+	prep1b := func() { prep1(); dbc.Conn.SetError(errMock) }
+	prep2 := dbc.Conn.PrepExecReset(execFn(q2.Test), newResult(q2.Test), users...)
+	prep3 := dbc.Conn.PrepExecReset(execFn(q3.Test), newResult(q3.Test), users...)
+	prep4 := dbc.Conn.PrepExecReset(execFn(q4.Test), newResult(q4.Test), users...)
+
+	want1 := []User{u1, u2, u3, u5, u6, u7, u8, u9}
+	want2 := []User{u1, u2, u3, u4, u5, u9}
+	want3 := []User{u4, u5, u6, u7, u8}
+	testCases := []tst.P2W3Pre[*DeleteQuery[User], db.Conn, int, bool, []User]{
+		{nil, q0, dbc, 0, false, users},    // empty query
+		{nil, q1, nil, 0, false, users},    // no db connection
+		{prep1, q1, dbc, 1, true, want1},   // success query1
+		{prep1b, q1, dbc, 0, false, users}, // error on query1
+		{prep2, q2, dbc, 3, true, want2},   // success query2
+		{prep3, q3, dbc, 4, true, want3},   // success query3
+		{prep4, q4, dbc, 0, true, users},   // success query4, no rows deleted
+	}
+	deleteExec := func(q *DeleteQuery[User], dbConn db.Conn) (int, bool, []User) {
+		result, err := Exec(q, dbConn)
+		if err != nil {
+			return 0, false, dbc.Conn.Items()
+		}
+		return RowsAffected(result), true, dbc.Conn.Items()
+	}
+	tst.AllP2W3Pre(t, testCases, "DeleteQuery.Exec", deleteExec, tst.AssertEqual[int], tst.AssertEqual[bool], tst.AssertListEqual)
 }
 
 func TestInsertRowQuery(t *testing.T) {
@@ -264,4 +333,17 @@ func TestUpdateQuery(t *testing.T) {
 		{q2, "UPDATE `users` SET `Username` = ? WHERE `Username` = ?", []any{"admin", "groot"}},
 	}
 	tst.AllP1W2(t, testCases, "UpdateQuery.BuildQuery", (*UpdateQuery[User]).BuildQuery, tst.AssertEqual, tst.AssertListEqual)
+}
+
+func TestResultCheckers(t *testing.T) {
+	// TODO: AssertNothing
+	// TODO: AssertRowsAffected
+	// TODO: RowsAffected
+	// TODO: LastInsertID
+}
+
+func TestExec(t *testing.T) {
+	// TODO: Exec
+	// TODO: ExecTx
+	// TODO: Rollback
 }
