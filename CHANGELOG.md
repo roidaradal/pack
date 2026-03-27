@@ -2,7 +2,8 @@
   - Commit:
   * ResultChecker tests
   * Transaction tests
-  - Package db tests
+  * DB interfaces tests
+  - DB adapters tests
 ## v0.2.22 - Query Execution Tests
   * Commit: 2026-03-27 11:57
   * ResultChecker functions
