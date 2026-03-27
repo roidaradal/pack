@@ -109,6 +109,7 @@ func TestDeleteExec(t *testing.T) {
 	))
 	q4 := NewDeleteQuery[User](this, table)
 	q4.Where(Greater[User](this, &u.ID, 10))
+	q5 := NewDeleteQuery[User](this, table) // no condition
 
 	execFn := func(test func(User) bool) func([]User) ([]User, error) {
 		test = conv.NotFn(test)
@@ -126,6 +127,7 @@ func TestDeleteExec(t *testing.T) {
 	prep2 := dbc.Conn.PrepExecReset(execFn(q2.Test), newResult(q2.Test), users...)
 	prep3 := dbc.Conn.PrepExecReset(execFn(q3.Test), newResult(q3.Test), users...)
 	prep4 := dbc.Conn.PrepExecReset(execFn(q4.Test), newResult(q4.Test), users...)
+	prep5 := dbc.Conn.PrepExecReset(execFn(q5.Test), newResult(q5.Test), users...)
 
 	want1 := []User{u1, u2, u3, u5, u6, u7, u8, u9}
 	want2 := []User{u1, u2, u3, u4, u5, u9}
@@ -138,6 +140,7 @@ func TestDeleteExec(t *testing.T) {
 		{prep2, q2, dbc, 3, true, want2},   // success query2
 		{prep3, q3, dbc, 4, true, want3},   // success query3
 		{prep4, q4, dbc, 0, true, users},   // success query4, no rows deleted
+		{prep5, q5, dbc, 0, true, users},   // success query5, no condition
 	}
 	deleteExec := func(q *DeleteQuery[User], dbConn db.Conn) (int, bool, []User) {
 		result, err := Exec(q, dbConn)
@@ -368,6 +371,7 @@ func TestInsertRowExec(t *testing.T) {
 	}
 	tst.AllP2W4Pre(t, testCases2, "InsertRowsQuery.Exec", insertRows, tst.AssertEqual[int], tst.AssertEqual[uint], tst.AssertEqual[bool], tst.AssertListEqual)
 }
+
 func TestUpdateQuery(t *testing.T) {
 	type User struct {
 		Username string
@@ -437,6 +441,90 @@ func TestUpdateQuery(t *testing.T) {
 		{q2, "UPDATE `users` SET `Username` = ? WHERE `Username` = ?", []any{"admin", "groot"}},
 	}
 	tst.AllP1W2(t, testCases, "UpdateQuery.BuildQuery", (*UpdateQuery[User]).BuildQuery, tst.AssertEqual, tst.AssertListEqual)
+}
+
+func TestUpdateExec(t *testing.T) {
+	type User struct {
+		ID   uint
+		Name string
+		Job  string
+	}
+	table := "users"
+	u := new(User)
+	this := testPrelude(t, u)
+	u1, u2, u3 := User{1, "Alice", "Dev"}, User{2, "Bob", "Dev"}, User{3, "Charlie", "Dev"}
+	u4, u5, u6 := User{4, "Dave", "QA"}, User{5, "Eve", "QA"}, User{6, "Frank", "Sales"}
+	u7, u8, u9 := User{7, "Grace", "Sales"}, User{8, "Harry", "UX"}, User{9, "Ivy", "Admin"}
+	users := []User{u1, u2, u3, u4, u5, u6, u7, u8, u9}
+
+	q0 := NewUpdateQuery[User](this, "")    // no table
+	q1 := NewUpdateQuery[User](this, table) // no update
+	q1.Where(Equal[User](this, &u.ID, 1))
+	q2 := NewUpdateQuery[User](this, table)
+	q2.Where(Equal[User](this, &u.ID, 2))
+	q2.Update(this, "Name", "Bobby")
+	update2 := func(u User) User { u.Name = "Bobby"; return u }
+	q3 := NewUpdateQuery[User](this, table)
+	q3.Where(Equal[User](this, &u.Job, "Sales"))
+	Update(this, q3, &u.Job, "Support")
+	update3 := func(u User) User { u.Job = "Support"; return u }
+	q4 := NewUpdateQuery[User](this, table)
+	q4.Where(In[User](this, &u.Job, []string{"QA", "Tester", "Admin"}))
+	q4.Updates(this, FieldUpdates{
+		"Name": [2]any{"...", "Anon"},
+		"Job":  [2]any{"...", "Bots"},
+	})
+	update4 := func(u User) User { u.Name = "Anon"; u.Job = "Bots"; return u }
+	q5 := NewUpdateQuery[User](this, table) // no condition = false
+	q5.Update(this, "ID", 0)
+	update5 := func(u User) User { u.ID = 0; return u }
+
+	execFn := func(test func(User) bool, update func(User) User) func([]User) ([]User, error) {
+		return func(items []User) ([]User, error) {
+			items2 := make([]User, len(items))
+			for i, item := range items {
+				item2 := item
+				if test(item) {
+					item2 = User{item.ID, item.Name, item.Job} // copy
+					item2 = update(item2)
+				}
+				items2[i] = item2
+			}
+			return items2, nil
+		}
+	}
+	newResult := func(test func(User) bool) *tst.Result {
+		return tst.NewResult(list.CountFunc(users, test), 0, nil)
+	}
+
+	dbc := db.NewMockAdapter(tst.NewConn(users...))
+	prep2 := dbc.Conn.PrepExecReset(execFn(q2.Test, update2), newResult(q2.Test), users...)
+	prep2b := func() { prep2(); dbc.Conn.SetError(errMock) }
+	prep3 := dbc.Conn.PrepExecReset(execFn(q3.Test, update3), newResult(q3.Test), users...)
+	prep4 := dbc.Conn.PrepExecReset(execFn(q4.Test, update4), newResult(q4.Test), users...)
+	prep5 := dbc.Conn.PrepExecReset(execFn(q5.Test, update5), newResult(q5.Test), users...)
+
+	want2 := []User{u1, {2, "Bobby", "Dev"}, u3, u4, u5, u6, u7, u8, u9}
+	want3 := []User{u1, u2, u3, u4, u5, {6, "Frank", "Support"}, {7, "Grace", "Support"}, u8, u9}
+	want4 := []User{u1, u2, u3, {4, "Anon", "Bots"}, {5, "Anon", "Bots"}, u6, u7, u8, {9, "Anon", "Bots"}}
+	testCases := []tst.P2W3Pre[*UpdateQuery[User], db.Conn, int, bool, []User]{
+		{nil, q0, dbc, 0, false, users},    // empty query
+		{nil, q1, dbc, 0, false, users},    // no updates
+		{nil, q2, nil, 0, false, users},    // no db connection
+		{prep2, q2, dbc, 1, true, want2},   // success query2
+		{prep2b, q2, dbc, 0, false, users}, // error on query2
+		{prep3, q3, dbc, 2, true, want3},   // success query3
+		{prep4, q4, dbc, 3, true, want4},   // success query4
+		{prep5, q5, dbc, 0, true, users},   // success query5, no condition
+	}
+	updateExec := func(q *UpdateQuery[User], dbConn db.Conn) (int, bool, []User) {
+		result, err := Exec(q, dbConn)
+		if err != nil {
+			return 0, false, dbc.Conn.Items()
+		}
+		return RowsAffected(result), true, dbc.Conn.Items()
+	}
+	tst.AllP2W3Pre(t, testCases, "UpdateQuery.Exec", updateExec, tst.AssertEqual[int], tst.AssertEqual[bool], tst.AssertListEqual)
 }
 
 func TestResultCheckers(t *testing.T) {
