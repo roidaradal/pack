@@ -574,6 +574,40 @@ func TestResultCheckers(t *testing.T) {
 }
 
 func TestExec(t *testing.T) {
-	// TODO: ExecTx
-	// TODO: Rollback
+	type User struct {
+		ID   uint
+		Name string
+		Job  string
+	}
+	u := new(User)
+	table := "users"
+	this := testPrelude(t, u)
+
+	// ExecTx
+	q0 := NewDeleteQuery[User](this, "") // empty table
+	q1 := NewDeleteQuery[User](this, table)
+	q1.Where(Equal[User](this, &u.ID, 1))
+
+	res1 := tst.NewResult(1, 0, nil)
+	res2 := tst.NewResult(2, 0, nil)
+	tx1 := tst.NewTxFrom(res1, nil)
+	tx2 := tst.NewTxFrom(res2, nil)
+	tx3 := tst.NewTxFrom(res1, errMock)
+
+	check1 := AssertRowsAffected(1)
+
+	testCases := []tst.P3W2[Query, db.Tx, ResultChecker, int, bool]{
+		{q0, tx1, check1, 0, false}, // empty query
+		{q1, nil, check1, 0, false}, // nil tx
+		{q1, tx1, nil, 0, false},    // nil checker
+		{q1, tx2, check1, 0, false}, // fail result checker
+		{q1, tx3, check1, 0, false}, // error on Exec
+		{q1, tx1, check1, 1, true},  // success
+
+	}
+	execTx := func(q Query, tx db.Tx, checker ResultChecker) (int, bool) {
+		result, err := ExecTx(q, tx, checker)
+		return RowsAffected(result), err == nil
+	}
+	tst.AllP3W2(t, testCases, "ExecTx", execTx, tst.AssertEqual[int], tst.AssertEqual[bool])
 }
