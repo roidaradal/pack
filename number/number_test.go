@@ -3,7 +3,7 @@ package number
 import (
 	"testing"
 
-	"github.com/roidaradal/tst"
+	"github.com/zeroibot/tst"
 )
 
 func TestAbs(t *testing.T) {

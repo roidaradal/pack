@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/roidaradal/tst"
+	"github.com/zeroibot/tst"
 )
 
 func TestZip(t *testing.T) {

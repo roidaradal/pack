@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/roidaradal/tst"
+	"github.com/zeroibot/tst"
 )
 
 type testCase struct {

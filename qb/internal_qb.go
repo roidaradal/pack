@@ -1,9 +1,9 @@
 package qb
 
 import (
-	"github.com/roidaradal/pack/dict"
-	"github.com/roidaradal/pack/ds"
-	"github.com/roidaradal/pack/dyn"
+	"github.com/zeroibot/pack/dict"
+	"github.com/zeroibot/pack/ds"
+	"github.com/zeroibot/pack/dyn"
 )
 
 // createRowFn creates a map[string]any from given struct reference, used for row insertion

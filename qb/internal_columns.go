@@ -3,9 +3,9 @@ package qb
 import (
 	"reflect"
 
-	"github.com/roidaradal/pack/conv"
-	"github.com/roidaradal/pack/ds"
-	"github.com/roidaradal/pack/dyn"
+	"github.com/zeroibot/pack/conv"
+	"github.com/zeroibot/pack/ds"
+	"github.com/zeroibot/pack/dyn"
 )
 
 const (

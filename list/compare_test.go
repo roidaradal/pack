@@ -3,7 +3,7 @@ package list
 import (
 	"testing"
 
-	"github.com/roidaradal/tst"
+	"github.com/zeroibot/tst"
 )
 
 func TestCompareAllAny(t *testing.T) {

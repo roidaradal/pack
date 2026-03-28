@@ -3,7 +3,7 @@ package ds
 import (
 	"fmt"
 
-	"github.com/roidaradal/pack/number"
+	"github.com/zeroibot/pack/number"
 )
 
 // Range represents a range of Integers from [start, end)

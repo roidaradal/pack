@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/roidaradal/pack/conv"
-	"github.com/roidaradal/pack/db"
-	"github.com/roidaradal/pack/dict"
-	"github.com/roidaradal/pack/ds"
-	"github.com/roidaradal/pack/list"
-	"github.com/roidaradal/tst"
+	"github.com/zeroibot/pack/conv"
+	"github.com/zeroibot/pack/db"
+	"github.com/zeroibot/pack/dict"
+	"github.com/zeroibot/pack/ds"
+	"github.com/zeroibot/pack/list"
+	"github.com/zeroibot/tst"
 )
 
 func TestDeleteQuery(t *testing.T) {
@@ -90,14 +90,14 @@ func TestDeleteExec(t *testing.T) {
 		Name string
 		Job  string
 	}
-	table := "users"
 	u := new(User)
 	this := testPrelude(t, u)
-	u1, u2, u3 := User{1, "Alice", "Dev"}, User{2, "Bob", "Dev"}, User{3, "Charlie", "Dev"}
-	u4, u5, u6 := User{4, "Dave", "QA"}, User{5, "Eve", "QA"}, User{6, "Frank", "Sales"}
 	u7, u8, u9 := User{7, "Grace", "Sales"}, User{8, "Harry", "UX"}, User{9, "Ivy", "Admin"}
+	u4, u5, u6 := User{4, "Dave", "QA"}, User{5, "Eve", "QA"}, User{6, "Frank", "Sales"}
+	u1, u2, u3 := User{1, "Alice", "Dev"}, User{2, "Bob", "Dev"}, User{3, "Charlie", "Dev"}
 	users := []User{u1, u2, u3, u4, u5, u6, u7, u8, u9}
 
+	table := "users"
 	q0 := NewDeleteQuery[User](this, "")
 	q1 := NewDeleteQuery[User](this, table)
 	q1.Where(Equal[User](this, &u.ID, 4))

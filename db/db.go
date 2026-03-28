@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/go-sql-driver/mysql"
-	"github.com/roidaradal/tst"
+	"github.com/zeroibot/tst"
 )
 
 // Note: sql.Result is an interface with two methods:

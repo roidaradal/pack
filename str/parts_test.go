@@ -3,7 +3,7 @@ package str
 import (
 	"testing"
 
-	"github.com/roidaradal/tst"
+	"github.com/zeroibot/tst"
 )
 
 func TestCleanSplit(t *testing.T) {

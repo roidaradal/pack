@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/roidaradal/tst"
+	"github.com/zeroibot/tst"
 )
 
 func TestPointers(t *testing.T) {

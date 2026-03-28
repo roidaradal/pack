@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/roidaradal/pack/db"
-	"github.com/roidaradal/pack/dyn"
+	"github.com/zeroibot/pack/db"
+	"github.com/zeroibot/pack/dyn"
 )
 
 var (

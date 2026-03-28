@@ -4,9 +4,9 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/roidaradal/pack/dict"
-	"github.com/roidaradal/pack/ds"
-	"github.com/roidaradal/tst"
+	"github.com/zeroibot/pack/dict"
+	"github.com/zeroibot/pack/ds"
+	"github.com/zeroibot/tst"
 )
 
 var (

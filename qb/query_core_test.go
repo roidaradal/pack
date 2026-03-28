@@ -3,8 +3,8 @@ package qb
 import (
 	"testing"
 
-	"github.com/roidaradal/pack/dyn"
-	"github.com/roidaradal/tst"
+	"github.com/zeroibot/pack/dyn"
+	"github.com/zeroibot/tst"
 )
 
 func TestQueryCore(t *testing.T) {

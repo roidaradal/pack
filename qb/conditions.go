@@ -5,8 +5,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/roidaradal/pack/ds"
-	"github.com/roidaradal/pack/list"
+	"github.com/zeroibot/pack/ds"
+	"github.com/zeroibot/pack/list"
 )
 
 // Condition interface unifies all Condition objects:
