@@ -4,9 +4,9 @@ import (
 	"cmp"
 	"testing"
 
-	"github.com/roidaradal/pack/db"
-	"github.com/roidaradal/pack/list"
-	"github.com/roidaradal/tst"
+	"github.com/zeroibot/pack/db"
+	"github.com/zeroibot/pack/list"
+	"github.com/zeroibot/tst"
 )
 
 func TestCountQuery(t *testing.T) {

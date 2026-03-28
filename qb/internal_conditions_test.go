@@ -3,9 +3,9 @@ package qb
 import (
 	"testing"
 
-	"github.com/roidaradal/pack/ds"
-	"github.com/roidaradal/pack/list"
-	"github.com/roidaradal/tst"
+	"github.com/zeroibot/pack/ds"
+	"github.com/zeroibot/pack/list"
+	"github.com/zeroibot/tst"
 )
 
 func TestKVCondition(t *testing.T) {

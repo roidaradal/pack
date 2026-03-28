@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/roidaradal/pack/db"
-	"github.com/roidaradal/pack/dict"
-	"github.com/roidaradal/pack/ds"
-	"github.com/roidaradal/pack/dyn"
-	"github.com/roidaradal/pack/list"
-	"github.com/roidaradal/pack/str"
+	"github.com/zeroibot/pack/db"
+	"github.com/zeroibot/pack/dict"
+	"github.com/zeroibot/pack/ds"
+	"github.com/zeroibot/pack/dyn"
+	"github.com/zeroibot/pack/list"
+	"github.com/zeroibot/pack/str"
 )
 
 type dbType struct {

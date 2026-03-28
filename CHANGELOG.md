@@ -1,3 +1,6 @@
+## v0.3.0 - 
+  * Commit: 
+  * Rename package to github.com/zeroibot/pack
 ## v0.2.23 - Transaction Tests
   * Commit: 2026-03-27 15:59
   * ResultChecker tests

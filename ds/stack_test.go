@@ -3,7 +3,7 @@ package ds
 import (
 	"testing"
 
-	"github.com/roidaradal/tst"
+	"github.com/zeroibot/tst"
 )
 
 func TestStack(t *testing.T) {

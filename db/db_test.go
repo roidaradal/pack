@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/roidaradal/tst"
+	"github.com/zeroibot/tst"
 )
 
 func TestDBInterfaces(t *testing.T) {

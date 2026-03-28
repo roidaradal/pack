@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/roidaradal/pack/db"
-	"github.com/roidaradal/pack/ds"
-	"github.com/roidaradal/pack/list"
+	"github.com/zeroibot/pack/db"
+	"github.com/zeroibot/pack/ds"
+	"github.com/zeroibot/pack/list"
 )
 
 // CountQuery counts the number of rows that satisfy the condition

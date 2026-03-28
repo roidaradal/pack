@@ -3,7 +3,7 @@ package dyn
 import (
 	"testing"
 
-	"github.com/roidaradal/tst"
+	"github.com/zeroibot/tst"
 )
 
 func TestTypeCheck(t *testing.T) {

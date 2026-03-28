@@ -6,7 +6,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/roidaradal/tst"
+	"github.com/zeroibot/tst"
 )
 
 func TestMap(t *testing.T) {

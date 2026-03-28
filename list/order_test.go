@@ -3,7 +3,7 @@ package list
 import (
 	"testing"
 
-	"github.com/roidaradal/tst"
+	"github.com/zeroibot/tst"
 )
 
 func TestOrderFunctions(t *testing.T) {

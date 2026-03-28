@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/roidaradal/pack/conv"
-	"github.com/roidaradal/pack/db"
-	"github.com/roidaradal/pack/dict"
-	"github.com/roidaradal/pack/ds"
-	"github.com/roidaradal/pack/list"
-	"github.com/roidaradal/tst"
+	"github.com/zeroibot/pack/conv"
+	"github.com/zeroibot/pack/db"
+	"github.com/zeroibot/pack/dict"
+	"github.com/zeroibot/pack/ds"
+	"github.com/zeroibot/pack/list"
+	"github.com/zeroibot/tst"
 )
 
 func TestDeleteQuery(t *testing.T) {

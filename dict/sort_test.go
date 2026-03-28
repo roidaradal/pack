@@ -4,7 +4,7 @@ import (
 	"cmp"
 	"testing"
 
-	"github.com/roidaradal/tst"
+	"github.com/zeroibot/tst"
 )
 
 func TestSortedKeys(t *testing.T) {

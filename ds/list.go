@@ -4,7 +4,7 @@ import (
 	"math/rand/v2"
 	"slices"
 
-	"github.com/roidaradal/pack/number"
+	"github.com/zeroibot/pack/number"
 )
 
 type List[T any] []T

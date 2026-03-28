@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/roidaradal/tst"
+	"github.com/zeroibot/tst"
 )
 
 func TestFn(t *testing.T) {

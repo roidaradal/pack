@@ -4,7 +4,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/roidaradal/tst"
+	"github.com/zeroibot/tst"
 )
 
 func TestNewSet(t *testing.T) {

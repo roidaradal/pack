@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/roidaradal/pack/ds"
-	"github.com/roidaradal/pack/dyn"
-	"github.com/roidaradal/pack/str"
+	"github.com/zeroibot/pack/ds"
+	"github.com/zeroibot/pack/dyn"
+	"github.com/zeroibot/pack/str"
 )
 
 type testFn[T any] func(T) bool

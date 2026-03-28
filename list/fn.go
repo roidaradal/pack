@@ -1,6 +1,6 @@
 package list
 
-import "github.com/roidaradal/pack/number"
+import "github.com/zeroibot/pack/number"
 
 // CountFunc counts the number of items that passes the ok function
 func CountFunc[T any](items []T, ok func(T) bool) int {

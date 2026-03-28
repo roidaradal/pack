@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/roidaradal/pack/dict"
-	"github.com/roidaradal/tst"
+	"github.com/zeroibot/pack/dict"
+	"github.com/zeroibot/tst"
 )
 
 func TestAddType(t *testing.T) {

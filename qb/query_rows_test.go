@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/roidaradal/pack/db"
-	"github.com/roidaradal/tst"
+	"github.com/zeroibot/pack/db"
+	"github.com/zeroibot/tst"
 )
 
 func TestDistinctValuesQuery(t *testing.T) {

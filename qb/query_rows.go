@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/roidaradal/pack/db"
-	"github.com/roidaradal/pack/ds"
-	"github.com/roidaradal/pack/dyn"
-	"github.com/roidaradal/pack/number"
+	"github.com/zeroibot/pack/db"
+	"github.com/zeroibot/pack/ds"
+	"github.com/zeroibot/pack/dyn"
+	"github.com/zeroibot/pack/number"
 )
 
 // DistinctValuesQuery selects the distinct values for specified column that satisfies the condition
