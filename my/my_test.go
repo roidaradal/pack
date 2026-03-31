@@ -1,13 +1,23 @@
 package my
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/zeroibot/tst"
+)
 
 func TestStatusCodes(t *testing.T) {
-	// TODO: OK200, OK201
-	// TODO: Err401, 403, 404, 429, 500
+	pairs := [][2]int{
+		{OK200, 200}, {OK201, 201}, {Err400, 400}, {Err401, 401},
+		{Err403, 403}, {Err404, 404}, {Err429, 429}, {Err500, 500},
+	}
+	tst.All(t, pairs, "ErrorCodes", tst.AssertEqual)
 }
 
-func TestInstance(t *testing.T) {
+func TestNewInstance(t *testing.T) {
 	// TODO: NewInstance
+}
+
+func TestAddConnection(t *testing.T) {
 	// TODO: Instance.AddConnection
 }

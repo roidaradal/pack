@@ -1,8 +1,9 @@
 ## v0.3.2 - Model Package 
-  * Commit: 
+  * Commit: 2026-03-31 16:19
   * Model fields
   * Schema type
   * Clock format tests
+  * Status code tests
 ## v0.3.1 - My Package 
   * Commit: 2026-03-31 15:26
   * Request type
