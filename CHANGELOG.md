@@ -1,6 +1,7 @@
 ## v0.3.2 - Model Package 
   * Commit: 
   * Model fields
+  * Schema type 
 ## v0.3.1 - My Package 
   * Commit: 2026-03-31 15:26
   * Request type
