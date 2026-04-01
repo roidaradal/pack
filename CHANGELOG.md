@@ -2,7 +2,8 @@
   * Commit: 
   * Schema Insert 
   * Schema InsertRows
-  * Schema Edit
+  * Schema UpdateFields 
+  * Schema Update
 ## v0.3.4 - Schema Get and Group
   * Commit: 2026-04-01 11:47
   * Schema Count 
