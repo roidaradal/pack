@@ -5,4 +5,5 @@ import "errors"
 
 var (
 	MissingParams = errors.New("public: Missing required parameters")
+	NotFoundItem  = errors.New("public: Item not found")
 )

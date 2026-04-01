@@ -1,0 +1,82 @@
+package model
+
+import (
+	"fmt"
+
+	"github.com/zeroibot/pack/ds"
+	"github.com/zeroibot/pack/fail"
+	"github.com/zeroibot/pack/my"
+	"github.com/zeroibot/pack/qb"
+)
+
+type GetOrCreateParams[T any] struct {
+	Name          string
+	Owner         string
+	PreCondition  qb.DualCondition[T]
+	PostCondition qb.DualCondition[T]
+	NewFn         func() T
+}
+
+// GetOrCreate gets the item if it exists, otherwise creates and returns it
+func (s *Schema[T]) GetOrCreate(rq *my.Request, p *GetOrCreateParams[T]) ds.Result[T] {
+	return s.getOrCreate(rq, p, false)
+}
+
+// GetOrCreateTx gets the item if it exists, otherwise creates it as part of the transaction, and return the item
+func (s *Schema[T]) GetOrCreateTx(rq *my.Request, p *GetOrCreateParams[T]) ds.Result[T] {
+	return s.getOrCreate(rq, p, true)
+}
+
+// Common: get the item if it exists, otherwise create and return it
+func (s *Schema[T]) getOrCreate(rq *my.Request, p *GetOrCreateParams[T], isTx bool) ds.Result[T] {
+	// Fetch item to check if it exists
+	rowsResult := s.GetRows(rq, p.PreCondition)
+	if rowsResult.IsError() {
+		rq.Fail(my.Err500, "Failed to check if %s exists", p.Name)
+		err := rowsResult.Error()
+		if isTx {
+			err = qb.Rollback(rq.Tx, err) // manual rollback
+		}
+		return ds.Error[T](err)
+	}
+
+	rows := rowsResult.Value()
+	numRows := len(rows)
+	if numRows > 1 {
+		rq.Fail(my.Err500, "Failed to get one %s", p.Name)
+		err := fmt.Errorf("public: Multiple %s found", p.Name)
+		if isTx {
+			err = qb.Rollback(rq.Tx, err) // manual rollback
+		}
+		return ds.Error[T](err)
+	} else if numRows == 0 {
+		// Not found = create item
+		newItem := p.NewFn()
+		var result ds.Result[ID]
+		if isTx {
+			result = s.InsertTx(rq, &newItem)
+		} else {
+			result = s.Insert(rq, &newItem)
+		}
+		if result.IsError() {
+			rq.Fail(my.Err500, "Failed to create %s", p.Name)
+			return ds.Error[T](result.Error())
+		}
+
+		rq.AddFmtLog("Created %s for %s", p.Name, p.Owner)
+		return ds.NewResult(newItem, nil)
+	}
+
+	// At this point, numRows == 1
+	item := rows[0]
+	// Check if item passes PostCondition
+	if p.PostCondition != nil && p.PostCondition.Test(item) == false {
+		rq.Fail(my.Err500, "Failed to get %s", p.Name)
+		err := fail.NotFoundItem
+		if isTx {
+			err = qb.Rollback(rq.Tx, err) // manual rollback
+		}
+		return ds.Error[T](err)
+	}
+	return ds.NewResult(item, nil)
+}
