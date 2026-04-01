@@ -7,4 +7,5 @@ func TestCombo(t *testing.T) {
 	// TODO: Schema.GetOrCreateTx
 	// TODO: Schema.GetAndLockTx
 	// TODO: Schema.GetAndLockTxItems
+	// TODO: Schema.GetOrCreateAndLockTx
 }

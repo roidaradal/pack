@@ -17,6 +17,12 @@ type GetOrCreateParams[T any] struct {
 	NewFn         func() T
 }
 
+type GetOrCreateAndLockParams[T any] struct {
+	GetOrCreateParams[T]
+	LockField       *bool
+	LockConditionFn func(T) qb.DualCondition[T]
+}
+
 // GetOrCreate gets the item if it exists, otherwise creates and returns it
 func (s *Schema[T]) GetOrCreate(rq *my.Request, p *GetOrCreateParams[T]) ds.Result[T] {
 	return s.getOrCreate(rq, p, false)
@@ -59,7 +65,6 @@ func (s *Schema[T]) getOrCreate(rq *my.Request, p *GetOrCreateParams[T], isTx bo
 			result = s.Insert(rq, &newItem)
 		}
 		if result.IsError() {
-			rq.Fail(my.Err500, "Failed to create %s", p.Name)
 			return ds.Error[T](result.Error())
 		}
 
@@ -143,4 +148,33 @@ func (s *Schema[T]) GetAndLockTxItems(rqtx *my.Request, lockField *bool, selectC
 	}
 
 	return ds.NewResult(items, nil)
+}
+
+// GetOrCreateAndLockTx runs GetOrCreate and locks the item as part of a transaction
+// Note: no need to include IsLocked = true/false in conditions, as this function adds it
+func (s *Schema[T]) GetOrCreateAndLockTx(rqtx *my.Request, p *GetOrCreateAndLockParams[T]) ds.Result[T] {
+	this := s.instance
+	isUnlocked := qb.Equal[T](this, p.LockField, false)
+
+	// Get or create unlocked item
+	if p.PostCondition == nil {
+		p.PostCondition = isUnlocked
+	} else {
+		p.PostCondition = qb.And(p.PostCondition, isUnlocked)
+	}
+	result := s.GetOrCreateTx(rqtx, &p.GetOrCreateParams)
+	if result.IsError() {
+		return ds.Error[T](result.Error())
+	}
+
+	// Lock item
+	item := result.Value()
+	lockCondition := qb.And(p.LockConditionFn(item), isUnlocked)
+	err := s.SetTxFlag(rqtx, lockCondition, p.LockField, true)
+	if err != nil {
+		rqtx.Fail(my.Err500, "Failed to lock item")
+		return ds.Error[T](err)
+	}
+
+	return ds.NewResult(item, nil)
 }
