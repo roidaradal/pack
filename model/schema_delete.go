@@ -42,20 +42,19 @@ func (s *Schema[T]) deleteAt(rq *my.Request, condition qb.DualCondition[T], tabl
 	q.Where(condition)
 
 	// Execute DeleteQuery
-	var result sql.Result
-	var err error
+	var result ds.Result[sql.Result]
 	if isTx {
 		rq.AddTxStep(q)
-		result, err = qb.ExecTx(q, rq.Tx, rq.Checker)
+		result = qb.ExecTx(q, rq.Tx, rq.Checker)
 	} else {
-		result, err = qb.Exec(q, rq.DB)
+		result = qb.Exec(q, rq.DB)
 	}
-	if err != nil {
+	if result.IsError() {
 		rq.Fail(my.Err500, "Failed to delete %s", s.Name)
-		return ds.Error[int](err)
+		return ds.Error[int](result.Error())
 	}
 
-	rowsDeleted := qb.RowsAffected(result)
+	rowsDeleted := qb.RowsAffected(result.Value())
 	if rowsDeleted != 1 {
 		rq.AddFmtLog("Deleted: %d %s", rowsDeleted, s.Name)
 	}
