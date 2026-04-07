@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/zeroibot/pack/clock"
 	"github.com/zeroibot/pack/dict"
 	"github.com/zeroibot/pack/io"
 )
@@ -57,4 +58,23 @@ func LoadConfig[T any](path string) (*T, error) {
 		}
 	}
 	return cfg, nil
+}
+
+// Run runs a task every given interval, where TimeScale = time.Hour, time.Minute, time.Second
+func Run[A any](this *Instance, app *A, name string, task func(*A), interval int, timeScale time.Duration) {
+	if interval < 0 {
+		fmt.Printf("Daemon:%s is disabled\n", name)
+		return
+	}
+	timeInterval := time.Duration(interval) * timeScale
+	this.start.Set(name, time.Now())
+	this.duration.Set(name, timeInterval)
+	go func() {
+		for {
+			start := time.Now()
+			this.last.Set(name, start)
+			task(app)
+			clock.Sleep(timeInterval, start)
+		}
+	}()
 }
