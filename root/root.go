@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/zeroibot/pack/dict"
+	"github.com/zeroibot/pack/ds"
 	"github.com/zeroibot/pack/fail"
 	"github.com/zeroibot/pack/lang"
 	"github.com/zeroibot/pack/str"
@@ -137,6 +138,54 @@ func getCommandParams(cmdMap map[string]*CmdConfig, line string) (string, []stri
 }
 
 // displayHelp displays the help list
-func displayHelp(cmdMap map[string]*CmdConfig, command string) {
+func displayHelp(cmdMap map[string]*CmdConfig, targetCommand string) {
+	targetCommand = strings.ToLower(targetCommand)
+	if _, ok := cmdMap[targetCommand]; !ok && targetCommand != allCommands && !slices.Contains(helpSkipCommands, targetCommand) {
+		fmt.Println("Error: unknown command: ", targetCommand)
+		fmt.Println(getHelp)
+		return
+	}
+	fmt.Println("Usage: <command> <params>")
+	fmt.Println("\nCommands and params:")
 
+	for _, command := range dict.SortedKeys(cmdMap) {
+		if slices.Contains(helpSkipCommands, command) {
+			continue
+		}
+		cfg := cmdMap[command]
+		if targetCommand == allCommands || targetCommand == command {
+			fmt.Printf("%-30s\t%s\n", command, cfg.Docs)
+		}
+	}
+}
+
+// searchCommand searches for command keyword
+func searchCommand(cmdMap map[string]*CmdConfig, keyword string) {
+	keyword = strings.ToLower(keyword)
+	commands := dict.SortedKeys(cmdMap)
+	if keyword == allCommands {
+		stems := ds.NewSet[string]()
+		for _, command := range commands {
+			if slices.Contains(helpSkipCommands, command) {
+				continue
+			}
+			stem := str.CleanSplit(command, cmdGlue)[0]
+			stems.Add(stem)
+		}
+		heads := stems.Items()
+		slices.Sort(heads)
+		for _, head := range heads {
+			fmt.Println(head)
+		}
+	} else {
+		for _, command := range commands {
+			if slices.Contains(helpSkipCommands, command) {
+				continue
+			}
+			if strings.Contains(command, keyword) {
+				cfg := cmdMap[command]
+				fmt.Printf("%-30s\t%s\n", command, cfg.Docs)
+			}
+		}
+	}
 }

@@ -3,6 +3,7 @@
   * New Commands
   * ParamsMap
   * Get command params
+  * Display help and search command
 ## v0.3.7 - Application Packages 
   * Commit: 2026-04-07 13:50
   * Fail functions
