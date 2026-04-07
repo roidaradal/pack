@@ -1,3 +1,6 @@
+## v0.3.9 - Daemon Package 
+  * Commit: 
+  * Update Root Package
 ## v0.3.8 - Root Package
   * Commit: 2026-04-07 15:13
   * New Commands
