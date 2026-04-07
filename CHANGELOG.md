@@ -1,4 +1,4 @@
-## v0.3.7 - Application Functions 
+## v0.3.7 - Application Packages 
   * Commit: 
   * Fail functions
   * Conf package
