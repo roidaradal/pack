@@ -3,6 +3,7 @@
   * Update Root Package
   * Dict SyncMap
   * Daemon Instance
+  * File System Functions
 ## v0.3.8 - Root Package
   * Commit: 2026-04-07 15:13
   * New Commands
