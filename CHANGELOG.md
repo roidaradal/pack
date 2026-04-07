@@ -1,6 +1,7 @@
 ## v0.3.7 - Application Functions 
   * Commit: 
   * Fail functions
+  * Conf package
 ## v0.3.6 - Schema Combos 
   * Commit: 2026-04-01 22:44
   * Schema GetOrCreate 
