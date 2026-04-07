@@ -3,6 +3,8 @@ package dict
 import (
 	"cmp"
 	"encoding/json"
+	"fmt"
+	"strings"
 )
 
 // Zip creates a new map by zipping the keys and values
@@ -117,4 +119,21 @@ func Pruned[T any](structRef *T, fieldNames ...string) (Object, error) {
 		}
 	}
 	return obj, nil
+}
+
+// Inspect returns key-value pair lines of the given struct pointer
+func Inspect[T any](structRef *T) string {
+	if structRef == nil {
+		return "<nil>"
+	}
+	out := []string{"{"}
+	obj, err := ToObject(structRef)
+	if err != nil {
+		return "{}"
+	}
+	for k, v := range obj {
+		out = append(out, fmt.Sprintf("%s: %v", k, v))
+	}
+	out = append(out, "}")
+	return strings.Join(out, "\n")
 }
