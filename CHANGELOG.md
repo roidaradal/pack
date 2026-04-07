@@ -1,3 +1,12 @@
+## v0.3.7 - Application Packages 
+  * Commit: 
+  * Fail functions
+  * Conf package
+  * conf.LoadEnv
+  * dict.Inspect
+  * Sys package and display functions
+  * String JSON functions
+  * Root package
 ## v0.3.6 - Schema Combos 
   * Commit: 2026-04-01 22:44
   * Schema GetOrCreate 

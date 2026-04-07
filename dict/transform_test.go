@@ -147,3 +147,7 @@ func compareObjects(t *testing.T, actual, want Object) {
 		tst.AssertEqual(t, fmt.Sprintf("ToObject[%q]", key), actualValue, wantValue)
 	}
 }
+
+func TestInspect(t *testing.T) {
+	// TODO: Inspect
+}
