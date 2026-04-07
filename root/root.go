@@ -1,6 +1,7 @@
 package root
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"slices"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/zeroibot/pack/dict"
 	"github.com/zeroibot/pack/fail"
+	"github.com/zeroibot/pack/lang"
 	"github.com/zeroibot/pack/str"
 	"golang.org/x/term"
 )
@@ -93,4 +95,48 @@ func Authenticate(authFn func(string) error) error {
 		return fmt.Errorf("root authentication failed: %w", err)
 	}
 	return nil
+}
+
+// validateCommandParams checks if the command exists and the parameters meet the min parameter count
+func validateCommandParams(cmdMap map[string]*CmdConfig, command string, params []string) error {
+	if command == cmdExit || command == cmdHelp {
+		return nil
+	}
+	if command == cmdSearch {
+		return lang.Ternary(len(params) < 1, errInvalidParamCount, nil)
+	}
+	cfg, ok := cmdMap[command]
+	if !ok {
+		return errInvalidCommand
+	}
+	if len(params) < cfg.MinParams {
+		return errInvalidParamCount
+	}
+	return nil
+}
+
+// getCommandParams gets the command and parameters from the line
+func getCommandParams(cmdMap map[string]*CmdConfig, line string) (string, []string) {
+	if strings.TrimSpace(line) == "" {
+		fmt.Println(getHelp)
+		return "", nil
+	}
+	args := str.SpaceSplit(line)
+	command, params := strings.ToLower(args[0]), args[1:]
+	err := validateCommandParams(cmdMap, command, params)
+	if err != nil {
+		fmt.Println("Error:", err)
+		if errors.Is(err, errInvalidCommand) {
+			fmt.Println(getHelp)
+		} else if errors.Is(err, errInvalidParamCount) {
+			displayHelp(cmdMap, command)
+		}
+		return "", nil
+	}
+	return command, params
+}
+
+// displayHelp displays the help list
+func displayHelp(cmdMap map[string]*CmdConfig, command string) {
+
 }
