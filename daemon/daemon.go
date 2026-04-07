@@ -78,3 +78,29 @@ func Run[A any](this *Instance, app *A, name string, task func(*A), interval int
 		}
 	}()
 }
+
+type Info struct {
+	Start    string
+	Last     string
+	Duration string
+}
+
+// All returns info on all running daemons
+func All(this *Instance) map[string]Info {
+	startTimes := this.start.Map()
+	lastTimes := this.last.Map()
+	durations := this.duration.Map()
+	info := make(map[string]Info)
+	for name, startTime := range startTimes {
+		start := clock.StandardFormat(startTime)
+		var last, duration string
+		if dict.HasKey(lastTimes, name) {
+			last = clock.StandardFormat(lastTimes[name])
+		}
+		if dict.HasKey(durations, name) {
+			duration = fmt.Sprintf("%v", durations[name])
+		}
+		info[name] = Info{start, last, duration}
+	}
+	return info
+}

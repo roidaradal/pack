@@ -1,5 +1,5 @@
 ## v0.3.9 - Daemon Package 
-  * Commit: 
+  * Commit: 2026-04-07 17:04
   * Update Root Package
   * Dict SyncMap
   * Daemon Instance
@@ -7,6 +7,7 @@
   * Read and Write JSON
   * Load Daemon Config
   * Daemon Run
+  * Daemon Info
 ## v0.3.8 - Root Package
   * Commit: 2026-04-07 15:13
   * New Commands
