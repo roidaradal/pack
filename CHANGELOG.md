@@ -1,3 +1,6 @@
+## v0.3.11 -
+  * Commit: 
+  * Update Daemon Instance methods
 ## v0.3.10 - Result Returns
   * Commit: 2026-04-08 08:42
   * Update Conf package
