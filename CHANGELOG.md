@@ -3,6 +3,7 @@
   * Update Conf package
   * Update Daemon package
   * Update Model package
+  * Update My package
 ## v0.3.9 - Daemon Package 
   * Commit: 2026-04-07 17:04
   * Update Root Package
