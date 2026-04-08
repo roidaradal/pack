@@ -1,6 +1,7 @@
 ## v0.3.10 - Result Returns
   * Commit: 
   * Update Conf package
+  * Update Daemon package
 ## v0.3.9 - Daemon Package 
   * Commit: 2026-04-07 17:04
   * Update Root Package
