@@ -2,6 +2,7 @@
   * Commit: 
   * Rename DualConditions
   * Update conditionQuery
+  * Update Schema Delete
 ## v0.3.12 - Remove Result
   * Commit: 2026-04-13 10:46
   * String Colors
