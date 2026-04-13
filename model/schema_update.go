@@ -3,7 +3,6 @@ package model
 import (
 	"database/sql"
 
-	"github.com/zeroibot/pack/ds"
 	"github.com/zeroibot/pack/fail"
 	"github.com/zeroibot/pack/my"
 	"github.com/zeroibot/pack/qb"
@@ -89,19 +88,20 @@ func (s *Schema[T]) updateFieldsAt(rq *my.Request, updates qb.FieldUpdates, cond
 // Common: execute UpdateQuery
 func (s *Schema[T]) update(rq *my.Request, q *qb.UpdateQuery[T], isTx bool) error {
 	// Execute UpdateQuery
-	var result ds.Result[sql.Result]
+	var result sql.Result
+	var err error
 	if isTx {
 		rq.AddTxStep(q)
-		result = qb.ExecTx(q, rq.Tx, rq.Checker)
+		result, err = qb.ExecTx(q, rq.Tx, rq.Checker)
 	} else {
-		result = qb.Exec(q, rq.DB)
+		result, err = qb.Exec(q, rq.DB)
 	}
-	if result.IsError() {
+	if err != nil {
 		rq.Fail(my.Err500, "Failed to update %s", s.Name)
-		return result.Error()
+		return err
 	}
 
-	rowsUpdated := qb.RowsAffected(result.Value())
+	rowsUpdated := qb.RowsAffected(result)
 	if rowsUpdated != 1 {
 		rq.AddFmtLog("Updated: %d %s", rowsUpdated, s.Name)
 	}
