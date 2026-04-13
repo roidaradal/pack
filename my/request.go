@@ -10,7 +10,6 @@ import (
 	"github.com/zeroibot/pack/clock"
 	"github.com/zeroibot/pack/db"
 	"github.com/zeroibot/pack/dict"
-	"github.com/zeroibot/pack/ds"
 	"github.com/zeroibot/pack/qb"
 	"github.com/zeroibot/pack/str"
 )
@@ -56,21 +55,21 @@ type Request struct {
 }
 
 // NewRequest creates a new Request
-func (i *Instance) NewRequest(name string, args ...any) ds.Result[*Request] {
+func (i *Instance) NewRequest(name string, args ...any) (*Request, error) {
 	if len(args) > 0 {
 		name = fmt.Sprintf(name, args...)
 	}
 	rq := newRequest(name)
 	if i.dbConn == nil {
 		rq.Status = Err500
-		return ds.Error[*Request](errNoDBConn)
+		return nil, errNoDBConn
 	}
 	rq.DB = i.dbConn
-	return ds.NewResult(rq, nil)
+	return rq, nil
 }
 
 // NewRequestAt creates a new Request at custom db
-func (i *Instance) NewRequestAt(key, name string, args ...any) ds.Result[*Request] {
+func (i *Instance) NewRequestAt(key, name string, args ...any) (*Request, error) {
 	if len(args) > 0 {
 		name = fmt.Sprintf(name, args...)
 	}
@@ -78,10 +77,10 @@ func (i *Instance) NewRequestAt(key, name string, args ...any) ds.Result[*Reques
 	conn, ok := i.dbConnMap[key]
 	if !ok || conn == nil {
 		rq.Status = Err500
-		return ds.Error[*Request](errNoDBConn)
+		return nil, errNoDBConn
 	}
 	rq.DB = conn
-	return ds.NewResult(rq, nil)
+	return rq, nil
 }
 
 // Create a new Request object
