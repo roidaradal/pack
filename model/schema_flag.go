@@ -9,47 +9,47 @@ import (
 )
 
 // SetFlag updates the booleanField = flag at schema table
-func (s *Schema[T]) SetFlag(rq *my.Request, condition qb.DualCondition[T], field *bool, flag bool) error {
+func (s *Schema[T]) SetFlag(rq *my.Request, condition qb.Condition, field *bool, flag bool) error {
 	return s.setFlagsAt(rq, condition, field, flag, 1, s.Table, false)
 }
 
 // SetFlagAt updates the booleanField = flag at given table
-func (s *Schema[T]) SetFlagAt(rq *my.Request, condition qb.DualCondition[T], field *bool, flag bool, table string) error {
+func (s *Schema[T]) SetFlagAt(rq *my.Request, condition qb.Condition, field *bool, flag bool, table string) error {
 	return s.setFlagsAt(rq, condition, field, flag, 1, table, false)
 }
 
 // SetTxFlag updates the booleanField = flag as part of transaction at schema table
-func (s *Schema[T]) SetTxFlag(rqtx *my.Request, condition qb.DualCondition[T], field *bool, flag bool) error {
+func (s *Schema[T]) SetTxFlag(rqtx *my.Request, condition qb.Condition, field *bool, flag bool) error {
 	return s.setFlagsAt(rqtx, condition, field, flag, 1, s.Table, true)
 }
 
 // SetTxFlagAt updates the booleanField = flag as part of transaction at given table
-func (s *Schema[T]) SetTxFlagAt(rqtx *my.Request, condition qb.DualCondition[T], field *bool, flag bool, table string) error {
+func (s *Schema[T]) SetTxFlagAt(rqtx *my.Request, condition qb.Condition, field *bool, flag bool, table string) error {
 	return s.setFlagsAt(rqtx, condition, field, flag, 1, table, true)
 }
 
 // SetFlags updates the booleanField = flag at schema table affecting multiple rows
-func (s *Schema[T]) SetFlags(rq *my.Request, condition qb.DualCondition[T], field *bool, flag bool, numItems int) error {
+func (s *Schema[T]) SetFlags(rq *my.Request, condition qb.Condition, field *bool, flag bool, numItems int) error {
 	return s.setFlagsAt(rq, condition, field, flag, numItems, s.Table, false)
 }
 
 // SetFlagsAt updates the booleanField = flag at given table affecting multiple rows
-func (s *Schema[T]) SetFlagsAt(rq *my.Request, condition qb.DualCondition[T], field *bool, flag bool, numItems int, table string) error {
+func (s *Schema[T]) SetFlagsAt(rq *my.Request, condition qb.Condition, field *bool, flag bool, numItems int, table string) error {
 	return s.setFlagsAt(rq, condition, field, flag, numItems, table, false)
 }
 
 // SetTxFlags updates the booleanField = flag as part of transaction at schema table affecting multiple rows
-func (s *Schema[T]) SetTxFlags(rqtx *my.Request, condition qb.DualCondition[T], field *bool, flag bool, numItems int) error {
+func (s *Schema[T]) SetTxFlags(rqtx *my.Request, condition qb.Condition, field *bool, flag bool, numItems int) error {
 	return s.setFlagsAt(rqtx, condition, field, flag, numItems, s.Table, true)
 }
 
 // SetTxFlagsAt updates the booleanField = flag as part of transaction at given table affecting multiple rows
-func (s *Schema[T]) SetTxFlagsAt(rqtx *my.Request, condition qb.DualCondition[T], field *bool, flag bool, numItems int, table string) error {
+func (s *Schema[T]) SetTxFlagsAt(rqtx *my.Request, condition qb.Condition, field *bool, flag bool, numItems int, table string) error {
 	return s.setFlagsAt(rqtx, condition, field, flag, numItems, table, true)
 }
 
 // Common: create and execute UpdateQuery, which sets booleanField = flag at given table
-func (s *Schema[T]) setFlagsAt(rq *my.Request, condition qb.DualCondition[T], field *bool, flag bool, numItems int, table string, isTx bool) error {
+func (s *Schema[T]) setFlagsAt(rq *my.Request, condition qb.Condition, field *bool, flag bool, numItems int, table string, isTx bool) error {
 	// Check that condition is set
 	if condition == nil {
 		rq.Fail(my.Err500, "Update condition is not set")
