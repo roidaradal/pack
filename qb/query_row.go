@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/zeroibot/pack/db"
-	"github.com/zeroibot/pack/ds"
 	"github.com/zeroibot/pack/list"
 )
 
@@ -179,38 +178,39 @@ func (q *SumQuery[T]) BuildQuery() (string, []any) {
 }
 
 // Count returns the number of rows that satisfy the CountQuery
-func (q *CountQuery[T]) Count(dbc db.Conn) ds.Result[int] {
+func (q *CountQuery[T]) Count(dbc db.Conn) (int, error) {
 	query, values, err := preQueryCheck(q, dbc)
 	if err != nil {
-		return ds.Error[int](err)
+		return 0, err
 	}
 	count := 0
 	err = dbc.QueryRow(query, values...).Scan(&count)
 	if err != nil {
-		return ds.Error[int](err)
+		return 0, err
 	}
-	return ds.NewResult(count, nil)
+	return count, nil
 }
 
 // Exists checks if there is at least 1 row that satisfies the CountQuery
-func (q *CountQuery[T]) Exists(dbc db.Conn) ds.Result[bool] {
-	result := q.Count(dbc)
-	if result.IsError() {
-		return ds.Error[bool](result.Error())
+func (q *CountQuery[T]) Exists(dbc db.Conn) (bool, error) {
+	count, err := q.Count(dbc)
+	if err != nil {
+		return false, err
 	}
-	return ds.NewResult(result.Value() > 0, nil)
+	return count > 0, nil
 }
 
 // QueryValue executes the ValueQuery and gets the column value
-func (q *ValueQuery[T, V]) QueryValue(this *Instance, dbc db.Conn) ds.Result[V] {
+func (q *ValueQuery[T, V]) QueryValue(this *Instance, dbc db.Conn) (V, error) {
 	return queryValue[T, V](this, dbc, q, q.reader, q.typeName, q.columnName)
 }
 
 // QueryRow executes the SelectRowQuery and gets the row object
-func (q *SelectRowQuery[T]) QueryRow(dbc db.Conn) ds.Result[T] {
+func (q *SelectRowQuery[T]) QueryRow(dbc db.Conn) (T, error) {
+	var zero T
 	query, values, err := preReadCheck(q, dbc, q.reader)
 	if err != nil {
-		return ds.Error[T](err)
+		return zero, err
 	}
 
 	row := dbc.QueryRow(query, values...)
@@ -218,11 +218,12 @@ func (q *SelectRowQuery[T]) QueryRow(dbc db.Conn) ds.Result[T] {
 }
 
 // QueryRow executes the TopRowQuery and gets the top row object
-func (q *TopRowQuery[T]) QueryRow(dbc db.Conn) ds.Result[T] {
+func (q *TopRowQuery[T]) QueryRow(dbc db.Conn) (T, error) {
+	var zero T
 	q.limit = 1 // override limit to 1
 	query, values, err := preReadCheck(q, dbc, q.reader)
 	if err != nil {
-		return ds.Error[T](err)
+		return zero, err
 	}
 
 	row := dbc.QueryRow(query, values...)
@@ -230,26 +231,27 @@ func (q *TopRowQuery[T]) QueryRow(dbc db.Conn) ds.Result[T] {
 }
 
 // QueryRows executes the TopRowQuery and returns the top N row objects
-func (q *TopRowQuery[T]) QueryRows(dbc db.Conn) ds.Result[[]T] {
+func (q *TopRowQuery[T]) QueryRows(dbc db.Conn) ([]T, error) {
 	return getRows(dbc, q, q.reader)
 }
 
 // QueryValue executes the TopValueQuery and gets the top column value
-func (q *TopValueQuery[T, V]) QueryValue(this *Instance, dbc db.Conn) ds.Result[V] {
+func (q *TopValueQuery[T, V]) QueryValue(this *Instance, dbc db.Conn) (V, error) {
 	q.limit = 1 // override limit to 1
 	return queryValue[T, V](this, dbc, q, q.reader, q.typeName, q.columnName)
 }
 
 // QueryValues executes the TopValueQuery and gets the top N column values
-func (q *TopValueQuery[T, V]) QueryValues(this *Instance, dbc db.Conn) ds.Result[[]V] {
+func (q *TopValueQuery[T, V]) QueryValues(this *Instance, dbc db.Conn) ([]V, error) {
 	return getValueList[T, V](this, dbc, q, q.reader, q.typeName, q.columnName)
 }
 
 // Sum executes the SumQuery and returns an object with the sum values
-func (q *SumQuery[T]) Sum(dbc db.Conn) ds.Result[T] {
+func (q *SumQuery[T]) Sum(dbc db.Conn) (T, error) {
+	var zero T
 	query, values, err := preQueryCheck(q, dbc)
 	if err != nil {
-		return ds.Error[T](err)
+		return zero, err
 	}
 
 	row := dbc.QueryRow(query, values...)
@@ -257,18 +259,19 @@ func (q *SumQuery[T]) Sum(dbc db.Conn) ds.Result[T] {
 }
 
 // Common steps for querying a row and getting a column value
-func queryValue[T, V any](this *Instance, dbc db.Conn, q Query, reader RowReader[T], typeName, columnName string) ds.Result[V] {
+func queryValue[T, V any](this *Instance, dbc db.Conn, q Query, reader RowReader[T], typeName, columnName string) (V, error) {
+	var zero V
 	query, values, err := preReadCheck(q, dbc, reader)
 	if err != nil {
-		return ds.Error[V](err)
+		return zero, err
 	}
 
 	row := dbc.QueryRow(query, values...)
-	result := reader(row)
-	if result.IsError() {
-		return ds.Error[V](result.Error())
+	result, err := reader(row)
+	if err != nil {
+		return zero, err
 	}
 
 	columnName = this.dbType.rawIdentifier(columnName)
-	return getStructTypedColumnValue[V](this, new(result.Value()), typeName, columnName)
+	return getStructTypedColumnValue[V](this, &result, typeName, columnName)
 }

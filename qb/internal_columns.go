@@ -135,16 +135,17 @@ func (i *Instance) getStructColumnValue(structRef any, typeName, columnName stri
 }
 
 // Internal: get field value from given struct reference, type name, and column name, and type coerce into type V
-func getStructTypedColumnValue[V any](this *Instance, structRef any, typeName, columnName string) ds.Result[V] {
+func getStructTypedColumnValue[V any](this *Instance, structRef any, typeName, columnName string) (V, error) {
+	var zero V
 	rawValue, ok := this.getStructColumnValue(structRef, typeName, columnName)
 	if !ok {
-		return ds.Error[V](errNotFoundField)
+		return zero, errNotFoundField
 	}
 	value, ok := rawValue.(V)
 	if !ok {
-		return ds.Error[V](errFailedTypeAssertion)
+		return zero, errFailedTypeAssertion
 	}
-	return ds.NewResult[V](value, nil)
+	return value, nil
 }
 
 // Internal: get corresponding field name of given field reference
