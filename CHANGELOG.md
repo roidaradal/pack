@@ -1,3 +1,17 @@
+## v0.3.13 - Change Query Conditions
+  * Commit: 2026-04-13 13:57
+  * Rename DualConditions
+  * Update conditionQuery
+  * Update Schema Delete
+  * Update Schema Set Flag
+  * Update Schema Update
+  * Update Schema Toggle
+  * Update Schema Group
+  * Update Schema Get
+  * Update Schema Combo
+  * Fix QB Exec Tests
+  * Fix QB Row Tests
+  * Fix QB Rows Tests
 ## v0.3.12 - Remove Result
   * Commit: 2026-04-13 10:46
   * String Colors
