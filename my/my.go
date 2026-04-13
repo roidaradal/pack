@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/zeroibot/pack/db"
-	"github.com/zeroibot/pack/ds"
 )
 
 const (
@@ -26,25 +25,25 @@ type Instance struct {
 }
 
 // NewInstance creates a new Instance object
-func NewInstance(p *db.ConnParams) ds.Result[*Instance] {
-	dbc := db.NewSQLConnection(p)
-	if dbc.IsError() {
-		return ds.Error[*Instance](dbc.Error())
+func NewInstance(p *db.ConnParams) (*Instance, error) {
+	dbc, err := db.NewSQLConnection(p)
+	if err != nil {
+		return nil, err
 	}
-	dbAdapter := db.NewAdapter(dbc.Value())
+	dbAdapter := db.NewAdapter(dbc)
 	instance := new(Instance{
 		dbConn:    dbAdapter,
 		dbConnMap: make(map[string]db.Conn),
 	})
-	return ds.NewResult(instance, nil)
+	return instance, nil
 }
 
 // AddConnection adds a custom DB connection
 func (i *Instance) AddConnection(name string, p *db.ConnParams) error {
-	dbc := db.NewSQLConnection(p)
-	if dbc.IsError() {
-		return dbc.Error()
+	dbc, err := db.NewSQLConnection(p)
+	if err != nil {
+		return err
 	}
-	i.dbConnMap[name] = db.NewAdapter(dbc.Value())
+	i.dbConnMap[name] = db.NewAdapter(dbc)
 	return nil
 }

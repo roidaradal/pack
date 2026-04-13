@@ -167,8 +167,8 @@ func TestGetStructTypedColumnValue(t *testing.T) {
 		{u2, typeName, "Code", u2.Code, true}, // success
 	}
 	bridgeFn := func(structRef any, typeName, columnName string) (string, bool) {
-		res := getStructTypedColumnValue[string](this, structRef, typeName, columnName)
-		return res.Value(), res.NotError()
+		value, err := getStructTypedColumnValue[string](this, structRef, typeName, columnName)
+		return value, err == nil
 	}
 	tst.AllP3W2(t, testCases, "getStructTypedColumnValue", bridgeFn, tst.AssertEqual[string], tst.AssertEqual[bool])
 
@@ -179,8 +179,8 @@ func TestGetStructTypedColumnValue(t *testing.T) {
 		{u2, typeName, "Age", u2.Age, true}, // success
 	}
 	bridgeFn2 := func(structRef any, typeName, columnName string) (int, bool) {
-		res := getStructTypedColumnValue[int](this, structRef, typeName, columnName)
-		return res.Value(), res.NotError()
+		value, err := getStructTypedColumnValue[int](this, structRef, typeName, columnName)
+		return value, err == nil
 	}
 	tst.AllP3W2(t, testCases2, "getStructTypedColumnValue", bridgeFn2, tst.AssertEqual[int], tst.AssertEqual[bool])
 }

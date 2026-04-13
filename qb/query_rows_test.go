@@ -84,8 +84,8 @@ func TestDistinctValuesQuery(t *testing.T) {
 		{prep4, q2, dbc, empty, true},                    // removed typeName, should have empty result
 	}
 	distinctValuesQuery := func(q *DistinctValuesQuery[User, string], dbc db.Conn) ([]string, bool) {
-		res := q.Query(this, dbc)
-		return res.Value(), res.NotError()
+		items, err := q.Query(this, dbc)
+		return items, err == nil
 	}
 	tst.AllP2W2Pre(t, testCases4, "DistinctValuesQuery.Query", distinctValuesQuery, tst.AssertListEqual, tst.AssertEqual)
 }
@@ -174,8 +174,8 @@ func TestLookupQuery(t *testing.T) {
 		{prep6, q1, dbc, nil, false},  // nil reader
 	}
 	lookupQuery := func(q *LookupQuery[User, string, int], dbc db.Conn) (map[string]int, bool) {
-		res := q.Lookup(this, dbc)
-		return res.Value(), res.NotError()
+		items, err := q.Lookup(this, dbc)
+		return items, err == nil
 	}
 	tst.AllP2W2Pre(t, testCases5, "LookupQuery.Lookup", lookupQuery, tst.AssertMapEqual, tst.AssertEqual)
 }
@@ -285,8 +285,8 @@ func TestSelectRowsQuery(t *testing.T) {
 		{prep0b, q1, dbc, nil, false}, // nil reader
 	}
 	selectRowsQuery := func(q *SelectRowsQuery[Product], dbc db.Conn) ([]Product, bool) {
-		res := q.Query(dbc)
-		return res.Value(), res.NotError()
+		items, err := q.Query(dbc)
+		return items, err == nil
 	}
 	tst.AllP2W2Pre(t, testCases4, "SelectRowsQuery.Query", selectRowsQuery, tst.AssertListEqual, tst.AssertEqual)
 }
@@ -387,8 +387,8 @@ func TestGroupCountQuery(t *testing.T) {
 		{prep2, q1, dbc, nil, false},  // error after row scan
 	}
 	groupCountQuery := func(q *GroupCountQuery[User, string], dbc db.Conn) (map[string]int, bool) {
-		res := q.GroupCount(dbc)
-		return res.Value(), res.NotError()
+		items, err := q.GroupCount(dbc)
+		return items, err == nil
 	}
 	tst.AllP2W2Pre(t, testCases5, "GroupCountQuery.GroupCount", groupCountQuery, tst.AssertMapEqual, tst.AssertEqual)
 }
@@ -503,8 +503,8 @@ func TestGroupSumQuery(t *testing.T) {
 		{prep10, q10, dbc, want10, true}, // empty results
 	}
 	groupSumQuery := func(q *GroupSumQuery[Product, string, float64], dbc db.Conn) (map[string]float64, bool) {
-		res := q.GroupSum(dbc)
-		return res.Value(), res.NotError()
+		items, err := q.GroupSum(dbc)
+		return items, err == nil
 	}
 	tst.AllP2W2Pre(t, testCases7, "GroupSumQuery.GroupSum", groupSumQuery, tst.AssertMapEqual, tst.AssertEqual)
 }

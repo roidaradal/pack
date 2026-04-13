@@ -269,20 +269,20 @@ func LastInsertID(result sql.Result) (uint, bool) {
 }
 
 // Exec executes the given Query, and returns the SQL Result
-func Exec(q Query, dbc db.Conn) ds.Result[sql.Result] {
+func Exec(q Query, dbc db.Conn) (sql.Result, error) {
 	query, values, err := preQueryCheck(q, dbc)
 	if err != nil {
-		return ds.Error[sql.Result](err)
+		return nil, err
 	}
 	result, err := dbc.Exec(query, values...)
 	if err != nil {
-		return ds.Error[sql.Result](err)
+		return nil, err
 	}
-	return ds.NewResult(result, nil)
+	return result, nil
 }
 
 // ExecTx executes a given Query as part of a database transaction, and rolls back the transaction if any error occurs
-func ExecTx(q Query, tx db.Tx, checker ResultChecker) ds.Result[sql.Result] {
+func ExecTx(q Query, tx db.Tx, checker ResultChecker) (sql.Result, error) {
 	var err error = nil
 	query, values := q.BuildQuery()
 	if tx == nil {
@@ -293,22 +293,19 @@ func ExecTx(q Query, tx db.Tx, checker ResultChecker) ds.Result[sql.Result] {
 		err = errNoChecker
 	}
 	if err != nil {
-		err = Rollback(tx, err)
-		return ds.Error[sql.Result](err)
+		return nil, Rollback(tx, err)
 	}
 
 	result, err := tx.Exec(query, values...)
 	if err != nil {
-		err = Rollback(tx, err)
-		return ds.Error[sql.Result](err)
+		return nil, Rollback(tx, err)
 	}
 
 	if ok := checker(result); !ok {
-		err = Rollback(tx, errFailedResultCheck)
-		return ds.Error[sql.Result](err)
+		return nil, Rollback(tx, errFailedResultCheck)
 	}
 
-	return ds.NewResult(result, nil)
+	return result, nil
 }
 
 // Rollback rolls back the given database transaction

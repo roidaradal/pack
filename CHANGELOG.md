@@ -1,3 +1,14 @@
+## v0.3.12 - Remove Result
+  * Commit: 2026-04-13 10:46
+  * String Colors
+  * Update Conf package
+  * Update Io package
+  * Update Daemon package
+  * Update Db package
+  * Update My package
+  * Update Root and Sys packages
+  * Update Qb package 
+  * Update Model package
 ## v0.3.11 - Instance Updates
   * Commit: 2026-04-08 13:27
   * Update Daemon Instance methods

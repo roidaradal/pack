@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"github.com/zeroibot/pack/dict"
-	"github.com/zeroibot/pack/ds"
 	"github.com/zeroibot/pack/fail"
 	"github.com/zeroibot/pack/list"
 	"github.com/zeroibot/pack/my"
@@ -13,22 +12,22 @@ import (
 )
 
 // Insert performs an InsertRowQuery at schema table
-func (s *Schema[T]) Insert(rq *my.Request, item *T) ds.Result[ID] {
+func (s *Schema[T]) Insert(rq *my.Request, item *T) (ID, error) {
 	return s.insertAt(rq, item, s.Table, false)
 }
 
 // InsertAt performs an InsertRowQuery at given table
-func (s *Schema[T]) InsertAt(rq *my.Request, item *T, table string) ds.Result[ID] {
+func (s *Schema[T]) InsertAt(rq *my.Request, item *T, table string) (ID, error) {
 	return s.insertAt(rq, item, table, false)
 }
 
 // InsertTx performs an InsertRowQuery as part of a transaction at schema table
-func (s *Schema[T]) InsertTx(rqtx *my.Request, item *T) ds.Result[ID] {
+func (s *Schema[T]) InsertTx(rqtx *my.Request, item *T) (ID, error) {
 	return s.insertAt(rqtx, item, s.Table, true)
 }
 
 // InsertTxAt performs an InsertRowQuery as part of a transaction at given table
-func (s *Schema[T]) InsertTxAt(rqtx *my.Request, item *T, table string) ds.Result[ID] {
+func (s *Schema[T]) InsertTxAt(rqtx *my.Request, item *T, table string) (ID, error) {
 	return s.insertAt(rqtx, item, table, true)
 }
 
@@ -53,11 +52,11 @@ func (s *Schema[T]) InsertTxRowsAt(rqtx *my.Request, items []T, table string) er
 }
 
 // Common: create and execute InsertRowQuery at given table
-func (s *Schema[T]) insertAt(rq *my.Request, item *T, table string, isTx bool) ds.Result[ID] {
+func (s *Schema[T]) insertAt(rq *my.Request, item *T, table string, isTx bool) (ID, error) {
 	// Check that item is not nil
 	if item == nil {
 		rq.Fail(my.Err500, "Insert item is nil")
-		return ds.Error[ID](fail.MissingParams)
+		return 0, fail.MissingParams
 	}
 
 	// Build InsertRowQuery
@@ -66,34 +65,35 @@ func (s *Schema[T]) insertAt(rq *my.Request, item *T, table string, isTx bool) d
 	q.Row(this, qb.ToRow(this, item))
 
 	// Execute InsertRowQuery
-	var result ds.Result[sql.Result]
+	var result sql.Result
+	var err error
 	if isTx {
 		rq.AddTxStep(q)
-		result = qb.ExecTx(q, rq.Tx, rq.Checker)
+		result, err = qb.ExecTx(q, rq.Tx, rq.Checker)
 	} else {
-		result = qb.Exec(q, rq.DB)
+		result, err = qb.Exec(q, rq.DB)
 	}
-	if result.IsError() {
+	if err != nil {
 		rq.Fail(my.Err500, "Failed to insert %s", s.Name)
-		return ds.Error[ID](result.Error())
+		return 0, err
 	}
-	rowsInserted := qb.RowsAffected(result.Value())
+	rowsInserted := qb.RowsAffected(result)
 
 	// If not transaction, check if rowsInserted == 1
 	if !isTx && rowsInserted != 1 {
 		rq.Fail(my.Err500, "No %s rows inserted", s.Name)
-		return ds.Error[ID](errors.New("no rows inserted"))
+		return 0, errors.New("no rows inserted")
 	}
 
 	// Get last inserted ID
-	id, ok := qb.LastInsertID(result.Value())
+	id, ok := qb.LastInsertID(result)
 	if !ok {
 		rq.Fail(my.Err500, "Failed to get last inserted ID")
-		return ds.Error[ID](errors.New("failed to get last inserted ID"))
+		return 0, errors.New("failed to get last inserted ID")
 	}
 
 	rq.Status = my.OK201
-	return ds.NewResult[ID](id, nil)
+	return id, nil
 }
 
 // Common: create and execute InsertRowsQuery at given table
@@ -114,19 +114,20 @@ func (s *Schema[T]) insertRowsAt(rq *my.Request, items []T, table string, isTx b
 	q.Rows(this, rows...)
 
 	// Execute InsertRowsQuery
-	var result ds.Result[sql.Result]
+	var result sql.Result
+	var err error
 	if isTx {
 		rq.AddTxStep(q)
 		checker := qb.AssertRowsAffected(numItems)
-		result = qb.ExecTx(q, rq.Tx, checker)
+		result, err = qb.ExecTx(q, rq.Tx, checker)
 	} else {
-		result = qb.Exec(q, rq.DB)
+		result, err = qb.Exec(q, rq.DB)
 	}
-	if result.IsError() {
+	if err != nil {
 		rq.Fail(my.Err500, "Failed to insert %d %s rows", numItems, s.Name)
-		return result.Error()
+		return err
 	}
-	rowsInserted := qb.RowsAffected(result.Value())
+	rowsInserted := qb.RowsAffected(result)
 
 	// If not transaction, check if rowsInserted == numItems
 	if !isTx && rowsInserted != numItems {

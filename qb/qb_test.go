@@ -143,38 +143,38 @@ func TestRowFunctions(t *testing.T) {
 
 	// Not a struct type
 	intReader := NewRowReader[int](this, "Value", "Decimal")
-	intResult := intReader(tst.NewRow())
-	tst.AssertEqualAnd(t, "NewRowReader[int]", intResult.Value(), 0, intResult.IsError(), true)
+	intResult, err := intReader(tst.NewRow())
+	tst.AssertEqualAnd(t, "NewRowReader[int]", intResult, 0, err != nil, true)
 	// Valid full reader
 	fullReader := FullRowReader(this, userRef)
 	tst.AssertTrue(t, "FullRowReader", fullReader != nil)
 	// Successful read
-	result := fullReader(tst.NewRow("John", "111", 20))
-	tst.AssertTrue(t, "FullRowReader", result.NotError())
+	result, err := fullReader(tst.NewRow("John", "111", 20))
+	tst.AssertTrue(t, "FullRowReader", err == nil)
 	// Check that struct has been filled after fullReader read
 	want := User{"John", "111", 20, ""}
-	tst.AssertEqual(t, "FullRowReader.Read", result.Value(), want)
+	tst.AssertEqual(t, "FullRowReader.Read", result, want)
 	// Valid row reader, with specified columns
 	nameCol, pwdCol := this.Column(&userRef.Name), this.Column(&userRef.Password)
 	rowReader := NewRowReader[User](this, nameCol, pwdCol)
-	result = rowReader(tst.NewRow("Jane", "222"))
-	tst.AssertTrue(t, "RowReader.Read", result.NotError())
+	result, err = rowReader(tst.NewRow("Jane", "222"))
+	tst.AssertTrue(t, "RowReader.Read", err == nil)
 	// Check that struct has been filled after rowReader read
 	want = User{"Jane", "222", 0, ""}
-	tst.AssertEqual(t, "RowReader.Read", result.Value(), want)
+	tst.AssertEqual(t, "RowReader.Read", result, want)
 	// Valid row reader, but error in scanning (invalid type)
 	emptyUser := User{}
-	result = rowReader(tst.NewRow("Jane", 333))
-	tst.AssertEqualAnd(t, "RowReader.Read", result.Value(), emptyUser, result.IsError(), true)
+	result, err = rowReader(tst.NewRow("Jane", 333))
+	tst.AssertEqualAnd(t, "RowReader.Read", result, emptyUser, err != nil, true)
 	// Valid row reader, but error in scanning (incomplete items)
-	result = rowReader(tst.NewRow("Jane"))
-	tst.AssertEqualAnd(t, "RowReader.Read", result.Value(), emptyUser, result.IsError(), true)
+	result, err = rowReader(tst.NewRow("Jane"))
+	tst.AssertEqualAnd(t, "RowReader.Read", result, emptyUser, err != nil, true)
 	// Error because of blank columns
 	userReader := NewRowReader[User](this, nameCol, pwdCol, "")
-	result = userReader(tst.NewRow())
-	tst.AssertEqualAnd(t, "NewRowReader.Read", result.Value(), emptyUser, result.IsError(), true)
+	result, err = userReader(tst.NewRow())
+	tst.AssertEqualAnd(t, "NewRowReader.Read", result, emptyUser, err != nil, true)
 	// Error because of unknown column field
 	userReader = NewRowReader[User](this, nameCol, pwdCol, "secret")
-	result = userReader(tst.NewRow())
-	tst.AssertEqualAnd(t, "NewRowReader.Read", result.Value(), emptyUser, result.IsError(), true)
+	result, err = userReader(tst.NewRow())
+	tst.AssertEqualAnd(t, "NewRowReader.Read", result, emptyUser, err != nil, true)
 }

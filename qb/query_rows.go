@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/zeroibot/pack/db"
-	"github.com/zeroibot/pack/ds"
 	"github.com/zeroibot/pack/dyn"
 	"github.com/zeroibot/pack/number"
 )
@@ -185,46 +184,45 @@ func (q *GroupSumQuery[T, K, V]) BuildQuery() (string, []any) {
 }
 
 // Query executes the DistinctValuesQuery and returns the list of distinct values
-func (q *DistinctValuesQuery[T, V]) Query(this *Instance, dbc db.Conn) ds.Result[[]V] {
+func (q *DistinctValuesQuery[T, V]) Query(this *Instance, dbc db.Conn) ([]V, error) {
 	return getValueList[T, V](this, dbc, q, q.reader, q.typeName, q.columnName)
 }
 
 // Lookup executes the LookupQuery and returns the map[K]V lookup
-func (q *LookupQuery[T, K, V]) Lookup(this *Instance, dbc db.Conn) ds.Result[map[K]V] {
+func (q *LookupQuery[T, K, V]) Lookup(this *Instance, dbc db.Conn) (map[K]V, error) {
 	query, values, err := preReadCheck(q, dbc, q.reader)
 	if err != nil {
-		return ds.Error[map[K]V](err)
+		return nil, err
 	}
 
 	lookup := make(map[K]V)
 	keyColumn, valueColumn := this.dbType.rawIdentifier(q.keyColumn), this.dbType.rawIdentifier(q.valueColumn)
 	err = readRows(dbc, query, values, q.reader, func(item *T) {
-		keyResult := getStructTypedColumnValue[K](this, item, q.typeName, keyColumn)
-		valueResult := getStructTypedColumnValue[V](this, item, q.typeName, valueColumn)
-		if keyResult.IsError() || valueResult.IsError() {
+		key, err1 := getStructTypedColumnValue[K](this, item, q.typeName, keyColumn)
+		value, err2 := getStructTypedColumnValue[V](this, item, q.typeName, valueColumn)
+		if err1 != nil || err2 != nil {
 			return
 		}
-		lookup[keyResult.Value()] = valueResult.Value()
+		lookup[key] = value
 	})
 	if err != nil {
-		return ds.Error[map[K]V](err)
+		return nil, err
 	}
-
-	return ds.NewResult(lookup, nil)
+	return lookup, nil
 }
 
 // Query executes the SelectRowsQuery and returns the list of rows
-func (q *SelectRowsQuery[T]) Query(dbc db.Conn) ds.Result[[]T] {
+func (q *SelectRowsQuery[T]) Query(dbc db.Conn) ([]T, error) {
 	return getRows(dbc, q, q.reader)
 }
 
 // GroupCount executes the GroupCountQuery and returns the map[group]count
-func (q *GroupCountQuery[T, K]) GroupCount(dbc db.Conn) ds.Result[map[K]int] {
+func (q *GroupCountQuery[T, K]) GroupCount(dbc db.Conn) (map[K]int, error) {
 	return getGroups[K, int](dbc, q)
 }
 
 // GroupSum executes the GroupSumQuery and returns the map[group]sum
-func (q *GroupSumQuery[T, K, V]) GroupSum(dbc db.Conn) ds.Result[map[K]V] {
+func (q *GroupSumQuery[T, K, V]) GroupSum(dbc db.Conn) (map[K]V, error) {
 	return getGroups[K, V](dbc, q)
 }
 
@@ -237,10 +235,9 @@ func readRows[T any](dbc db.Conn, query string, values []any, reader RowReader[T
 	defer rows.Close()
 
 	for rows.Next() {
-		result := reader(rows)
-		if result.NotError() {
-			item := new(result.Value())
-			task(item)
+		item, err := reader(rows)
+		if err == nil {
+			task(&item)
 		}
 	}
 	if err = rows.Err(); err != nil {
@@ -251,33 +248,33 @@ func readRows[T any](dbc db.Conn, query string, values []any, reader RowReader[T
 }
 
 // Common: get list of values after executing the Query
-func getValueList[T, V any](this *Instance, dbc db.Conn, q Query, reader RowReader[T], typeName, columnName string) ds.Result[[]V] {
+func getValueList[T, V any](this *Instance, dbc db.Conn, q Query, reader RowReader[T], typeName, columnName string) ([]V, error) {
 	query, values, err := preReadCheck(q, dbc, reader)
 	if err != nil {
-		return ds.Error[[]V](err)
+		return nil, err
 	}
 
 	valueList := make([]V, 0)
 	columnName = this.dbType.rawIdentifier(columnName)
 	err = readRows(dbc, query, values, reader, func(item *T) {
-		result := getStructTypedColumnValue[V](this, item, typeName, columnName)
-		if result.IsError() {
+		value, err := getStructTypedColumnValue[V](this, item, typeName, columnName)
+		if err != nil {
 			return
 		}
-		valueList = append(valueList, result.Value())
+		valueList = append(valueList, value)
 	})
 	if err != nil {
-		return ds.Error[[]V](err)
+		return nil, err
 	}
 
-	return ds.NewResult(valueList, nil)
+	return valueList, nil
 }
 
 // Common: get list of rows after executing the Query
-func getRows[T any](dbc db.Conn, q Query, reader RowReader[T]) ds.Result[[]T] {
+func getRows[T any](dbc db.Conn, q Query, reader RowReader[T]) ([]T, error) {
 	query, values, err := preReadCheck(q, dbc, reader)
 	if err != nil {
-		return ds.Error[[]T](err)
+		return nil, err
 	}
 
 	items := make([]T, 0)
@@ -287,22 +284,22 @@ func getRows[T any](dbc db.Conn, q Query, reader RowReader[T]) ds.Result[[]T] {
 		}
 	})
 	if err != nil {
-		return ds.Error[[]T](err)
+		return nil, err
 	}
 
-	return ds.NewResult(items, nil)
+	return items, nil
 }
 
 // Common: execute a GroupQuery and return map[group]V
-func getGroups[K comparable, V number.Type](dbc db.Conn, q Query) ds.Result[map[K]V] {
+func getGroups[K comparable, V number.Type](dbc db.Conn, q Query) (map[K]V, error) {
 	query, values, err := preQueryCheck(q, dbc)
 	if err != nil {
-		return ds.Error[map[K]V](err)
+		return nil, err
 	}
 
 	rows, err := dbc.Query(query, values...)
 	if err != nil {
-		return ds.Error[map[K]V](err)
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -316,8 +313,8 @@ func getGroups[K comparable, V number.Type](dbc db.Conn, q Query) ds.Result[map[
 		}
 	}
 	if err = rows.Err(); err != nil {
-		return ds.Error[map[K]V](err)
+		return nil, err
 	}
 
-	return ds.NewResult(groups, nil)
+	return groups, nil
 }

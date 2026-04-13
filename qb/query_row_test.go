@@ -59,8 +59,8 @@ func TestCountQuery(t *testing.T) {
 		{prep2, q2, dbc, 0, true},  // Success with 0 count
 	}
 	countQuery := func(q *CountQuery[Person], dbc db.Conn) (int, bool) {
-		res := q.Count(dbc)
-		return res.Value(), res.NotError()
+		count, err := q.Count(dbc)
+		return count, err == nil
 	}
 	tst.AllP2W2Pre(t, testCases3, "CountQuery.Count", countQuery, tst.AssertEqual[int], tst.AssertEqual[bool])
 
@@ -73,8 +73,8 @@ func TestCountQuery(t *testing.T) {
 		{prep2, q2, dbc, false, true},  // Success with exist = false
 	}
 	existsQuery := func(q *CountQuery[Person], dbc db.Conn) (bool, bool) {
-		res := q.Exists(dbc)
-		return res.Value(), res.NotError()
+		exists, err := q.Exists(dbc)
+		return exists, err == nil
 	}
 	tst.AllP2W2Pre(t, testCases4, "CountQuery.Exists", existsQuery, tst.AssertEqual[bool], tst.AssertEqual[bool])
 }
@@ -139,8 +139,8 @@ func TestValueQuery(t *testing.T) {
 		{prep0b, q1, dbc, "", false},    // nil reader
 	}
 	valueQuery := func(q *ValueQuery[User, string], dbc db.Conn) (string, bool) {
-		res := q.QueryValue(this, dbc)
-		return res.Value(), res.NotError()
+		value, err := q.QueryValue(this, dbc)
+		return value, err == nil
 	}
 	tst.AllP2W2Pre(t, testCases3, "ValueQuery.QueryValue", valueQuery, tst.AssertEqual[string], tst.AssertEqual[bool])
 }
@@ -250,8 +250,8 @@ func TestSelectRowQuery(t *testing.T) {
 		{nil, q9, dbc, zero, false},   // blank column
 	}
 	selectRowQuery := func(q *SelectRowQuery[Company], dbc db.Conn) (Company, bool) {
-		res := q.QueryRow(dbc)
-		return res.Value(), res.NotError()
+		item, err := q.QueryRow(dbc)
+		return item, err == nil
 	}
 	tst.AllP2W2Pre(t, testCases3, "SelectRowQuery.QueryRow", selectRowQuery, tst.AssertEqual[Company], tst.AssertEqual[bool])
 }
@@ -341,8 +341,8 @@ func TestTopRowQuery(t *testing.T) {
 		{prep0b, q1, dbc, zero, false}, // Nil reader
 	}
 	topRowQuery := func(q *TopRowQuery[User], dbc db.Conn) (User, bool) {
-		res := q.QueryRow(dbc)
-		return res.Value(), res.NotError()
+		item, err := q.QueryRow(dbc)
+		return item, err == nil
 	}
 	tst.AllP2W2Pre(t, testCases3, "TopRowQuery.QueryRow", topRowQuery, tst.AssertEqual[User], tst.AssertEqual[bool])
 	q1.reader = reader
@@ -364,8 +364,8 @@ func TestTopRowQuery(t *testing.T) {
 		{prep0b, q1, dbc, nil, false},   // Nil reader
 	}
 	topRowsQuery := func(q *TopRowQuery[User], dbc db.Conn) ([]User, bool) {
-		res := q.QueryRows(dbc)
-		return res.Value(), res.NotError()
+		items, err := q.QueryRows(dbc)
+		return items, err == nil
 	}
 	tst.AllP2W2Pre(t, testCases4, "TopRowQuery.QueryRows", topRowsQuery, tst.AssertListEqual, tst.AssertEqual)
 }
@@ -456,8 +456,8 @@ func TestTopValueQuery(t *testing.T) {
 		{prep0b, q1, dbc, "", false},   // nil reader
 	}
 	topValueQuery := func(q *TopValueQuery[User, string], dbc db.Conn) (string, bool) {
-		res := q.QueryValue(this, dbc)
-		return res.Value(), res.NotError()
+		item, err := q.QueryValue(this, dbc)
+		return item, err == nil
 	}
 	tst.AllP2W2Pre(t, testCases4, "TopValueQuery.QueryValue", topValueQuery, tst.AssertEqual[string], tst.AssertEqual[bool])
 	q1.reader = reader
@@ -481,8 +481,8 @@ func TestTopValueQuery(t *testing.T) {
 
 	}
 	topValuesQuery := func(q *TopValueQuery[User, string], dbc db.Conn) ([]string, bool) {
-		res := q.QueryValues(this, dbc)
-		return res.Value(), res.NotError()
+		items, err := q.QueryValues(this, dbc)
+		return items, err == nil
 	}
 	tst.AllP2W2Pre(t, testCases5, "TopValueQuery.QueryValues", topValuesQuery, tst.AssertListEqual, tst.AssertEqual)
 }
@@ -577,8 +577,8 @@ func TestSumQuery(t *testing.T) {
 		{prep3, q3, dbc, sum3, true},  // Success query3
 	}
 	sumQuery := func(q *SumQuery[Product], dbc db.Conn) (Product, bool) {
-		res := q.Sum(dbc)
-		return res.Value(), res.NotError()
+		item, err := q.Sum(dbc)
+		return item, err == nil
 	}
 	tst.AllP2W2Pre(t, testCases3, "SumQuery.Sum", sumQuery, tst.AssertEqual[Product], tst.AssertEqual[bool])
 }

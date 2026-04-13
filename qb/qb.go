@@ -132,7 +132,7 @@ func (i *Instance) Fields(typeName string, fieldRefs ...any) ds.List[string] {
 }
 
 // RowReader is a function that reads row values into a struct
-type RowReader[T any] = func(db.RowScanner) ds.Result[T]
+type RowReader[T any] = func(db.RowScanner) (T, error)
 
 // ToRow converts a given struct to map[string]any for row insertion
 func ToRow[T any](this *Instance, structRef *T) dict.Object {
@@ -152,10 +152,10 @@ func FullRowReader[T any](this *Instance, structRef *T) RowReader[T] {
 
 // NewRowReader creates a RowReader for type T, with the given columns
 func NewRowReader[T any](this *Instance, columns ...string) RowReader[T] {
-	return func(row db.RowScanner) ds.Result[T] {
-		var item T
+	return func(row db.RowScanner) (T, error) {
+		var zero, item T
 		if !dyn.IsStruct(item) {
-			return ds.Error[T](fmt.Errorf("not a struct type"))
+			return item, fmt.Errorf("not a struct type")
 		}
 		typeName := dyn.TypeName(item)
 		numColumns := len(columns)
@@ -171,14 +171,14 @@ func NewRowReader[T any](this *Instance, columns ...string) RowReader[T] {
 			fieldRefs = append(fieldRefs, fieldRef)
 		}
 		if len(fieldRefs) != numColumns {
-			// Return nil if some columns failed
-			return ds.Error[T](fmt.Errorf("incomplete fields"))
+			// Return if some columns failed
+			return zero, fmt.Errorf("incomplete fields")
 		}
 		err := row.Scan(fieldRefs...)
 		if err != nil {
-			return ds.Error[T](err)
+			return zero, err
 		}
-		return ds.NewResult(item, nil)
+		return item, nil
 	}
 }
 
