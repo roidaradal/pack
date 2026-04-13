@@ -3,6 +3,7 @@
   * String Colors
   * Update Conf package
   * Update Io package
+  * Update Daemon package
 ## v0.3.11 - Instance Updates
   * Commit: 2026-04-08 13:27
   * Update Daemon Instance methods

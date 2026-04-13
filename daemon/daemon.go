@@ -7,7 +7,6 @@ import (
 
 	"github.com/zeroibot/pack/clock"
 	"github.com/zeroibot/pack/dict"
-	"github.com/zeroibot/pack/ds"
 	"github.com/zeroibot/pack/io"
 )
 
@@ -41,24 +40,23 @@ type Config struct {
 
 // LoadConfig loads a Daemon Config which is expected to follow the required structure.
 // This checks if any Interval values are 0 (invalid).
-func LoadConfig[T any](path string) ds.Result[T] {
-	result := io.ReadJSON[T](path)
-	if result.IsError() {
-		return result
-	}
-	cfg := new(result.Value())
-	cfgMap, err := dict.FromStruct[map[string]int](cfg)
+func LoadConfig[T any](path string) (*T, error) {
+	cfg, err := io.ReadJSON[T](path)
 	if err != nil {
-		return ds.Error[T](err)
+		return nil, err
+	}
+	cfgMap, err := dict.FromStruct[map[string]int](&cfg)
+	if err != nil {
+		return nil, err
 	}
 	for key := range cfgMap {
 		for cfgKey, value := range cfgMap[key] {
 			if value == 0 {
-				return ds.Error[T](fmt.Errorf("invalid daemon %s.%s: %d", key, cfgKey, value))
+				return nil, fmt.Errorf("invalid daemon %s.%s: %d", key, cfgKey, value)
 			}
 		}
 	}
-	return result
+	return &cfg, nil
 }
 
 // Run runs a task every given interval, where TimeScale = time.Hour, time.Minute, time.Second
