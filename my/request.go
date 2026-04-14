@@ -112,6 +112,16 @@ func (rq *Request) AddDB(key string) bool {
 	return true
 }
 
+// SwitchDB changes the database connection of the request
+func (rq *Request) SwitchDB(key string) bool {
+	conn, ok := rq.dbMap[key]
+	if !ok {
+		return false
+	}
+	rq.DB = conn
+	return true
+}
+
 // AddLog adds a log message to the request
 func (rq *Request) AddLog(message string) {
 	message = fmt.Sprintf("%s | %s", clock.DateTimeNow(), message)
