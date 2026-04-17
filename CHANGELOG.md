@@ -1,6 +1,7 @@
 ## v0.3.18 - Update Task Handlers 
   * Commit: 
   * Remove App type in root package
+  * Remove App type in web package
 ## v0.3.17 - Comb Package
   * Commit: 2026-04-16 09:55
   * web.RequestValidBody
