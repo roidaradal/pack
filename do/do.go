@@ -5,6 +5,8 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/zeroibot/pack/dict"
+	"github.com/zeroibot/pack/fail"
 	"github.com/zeroibot/pack/my"
 	"github.com/zeroibot/pack/root"
 	"github.com/zeroibot/pack/sys"
@@ -37,6 +39,14 @@ type Action struct {
 	Web  WebParamsFn
 }
 
+type ForkData[T any] struct {
+	Name   string
+	Fork   map[string]DataFn[T]
+	WebKey func(*http.Request) string
+	Cmd    CmdParamsFn
+	Web    WebParamsFn
+}
+
 // SetMyInstance sets the My instance
 func SetMyInstance(i *my.Instance) {
 	myInstance = i
@@ -62,6 +72,36 @@ func (t Data[T]) CmdHandler() root.CmdHandler {
 			}
 		}
 		data, err := t.Fn(rq)
+		sys.DisplayData(rq, data, err)
+	}
+}
+
+// CmdHandler returns a ForkData root command handler
+func (t ForkData[T]) CmdHandler() root.CmdHandler {
+	return func(params []string) {
+		if myInstance == nil {
+			sys.DisplayError(errNoMyInstance)
+			return
+		}
+		rq, err := myInstance.NewRequest(t.Name)
+		if err != nil {
+			sys.DisplayError(err)
+			return
+		}
+		key, params := params[0], params[1:]
+		if dict.NoKey(t.Fork, key) {
+			sys.DisplayError(fail.InvalidOption)
+			return
+		}
+		if t.Cmd != nil {
+			err = t.Cmd(rq, params)
+			if err != nil {
+				sys.DisplayError(err)
+				return
+			}
+		}
+		fn := t.Fork[key]
+		data, err := fn(rq)
 		sys.DisplayData(rq, data, err)
 	}
 }
@@ -110,6 +150,36 @@ func (t Data[T]) WebHandler() web.Handler {
 			}
 		}
 		data, err := t.Fn(rq)
+		web.SendDataResponse(w, rq, data, err)
+	}
+}
+
+// WebHandler returns a ForkData web handler
+func (t ForkData[T]) WebHandler() web.Handler {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if myInstance == nil {
+			web.SendError(w, nil, errNoMyInstance)
+			return
+		}
+		rq, err := myInstance.NewRequest(t.Name)
+		if err != nil {
+			web.SendError(w, rq, err)
+			return
+		}
+		key := t.WebKey(r)
+		if dict.NoKey(t.Fork, key) {
+			web.SendError(w, rq, fail.InvalidOption)
+			return
+		}
+		if t.Web != nil {
+			err = t.Web(rq, r)
+			if err != nil {
+				web.SendError(w, rq, err)
+				return
+			}
+		}
+		fn := t.Fork[key]
+		data, err := fn(rq)
 		web.SendDataResponse(w, rq, data, err)
 	}
 }

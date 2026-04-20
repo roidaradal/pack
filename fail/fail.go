@@ -8,6 +8,7 @@ import (
 )
 
 var (
+	InvalidOption  = errors.New("public: Invalid option")
 	InvalidSession = errors.New("public: Invalid session")
 	MismatchCount  = errors.New("public: Count does not match")
 	MissingParams  = errors.New("public: Missing required parameters")
