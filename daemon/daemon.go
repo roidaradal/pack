@@ -78,6 +78,30 @@ func (i *Instance) Run(name string, task func(), interval int, timeScale time.Du
 	}()
 }
 
+// RunWithOffset runs a task every given interval, with an initial offset sleep
+func (i *Instance) RunWithOffset(name string, task func(), interval int, timeScale time.Duration, offset int, offsetScale time.Duration) {
+	if interval < 0 {
+		fmt.Printf("Daemon:%s is disabled\n", name)
+		return
+	}
+	timeInterval := time.Duration(interval) * timeScale
+	go func() {
+		// Initial offset sleep
+		if offset > 0 {
+			duration := time.Duration(offset) * offsetScale
+			clock.Sleep(duration, time.Now())
+		}
+		i.start.Set(name, time.Now())
+		i.duration.Set(name, timeInterval)
+		for {
+			start := time.Now()
+			i.last.Set(name, start)
+			task()
+			clock.Sleep(timeInterval, start)
+		}
+	}()
+}
+
 type Info struct {
 	Start    string
 	Last     string
