@@ -1,6 +1,7 @@
 ## v0.3.25 - Fork Name 
-  * Commit:
+  * Commit: 2026-04-24 19:50
   * ForkName in ForkData and ForkAction
+  * AbstractTxManager and TxManager
 ## v0.3.24 - Request ExpectAffected
   * Commit: 2026-04-24 10:37
   * Remove error on Schema Insert without InsertID
