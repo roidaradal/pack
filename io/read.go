@@ -28,3 +28,12 @@ func ReadJSONList[T any](path string) ([]T, error) {
 func ReadJSONMap[V any](path string) (map[string]V, error) {
 	return ReadJSON[map[string]V](path)
 }
+
+// ReadFile reads the string contents of given path
+func ReadFile(path string) (string, error) {
+	bytes, err := os.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), nil
+}
