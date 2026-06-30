@@ -59,3 +59,19 @@ func ReadLines(path string) ([]string, error) {
 	}
 	return lines, nil
 }
+
+// ReadNonEmptyLines reads the non-empty lines of given path, and each non-empty line is trimeed for whitespace
+func ReadNonEmptyLines(path string) ([]string, error) {
+	rawLines, err := ReadRawLines(path)
+	if err != nil {
+		return nil, err
+	}
+	lines := make([]string, 0, len(rawLines))
+	for _, line := range rawLines {
+		line = strings.TrimSpace(line)
+		if line != "" {
+			lines = append(lines, line)
+		}
+	}
+	return lines, nil
+}

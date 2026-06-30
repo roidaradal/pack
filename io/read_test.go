@@ -12,4 +12,5 @@ func TestReadFile(t *testing.T) {
 	// TODO: ReadFile
 	// TODO: ReadRawLines
 	// TODO: ReadLines
+	// TODO: ReadNonEmptyLines
 }
