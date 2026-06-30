@@ -11,4 +11,5 @@ func TestReadJSON(t *testing.T) {
 func TestReadFile(t *testing.T) {
 	// TODO: ReadFile
 	// TODO: ReadRawLines
+	// TODO: ReadLines
 }

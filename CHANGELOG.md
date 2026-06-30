@@ -2,6 +2,7 @@
   * Commit: 
   * io.ReadFile
   * io.ReadRawLines
+  * io.ReadLines
 ## v0.3.35 - Schema GetRowsAndUpdateTx 
   * Commit:2026-06-03 16:21
   * Schema GetRowsAndUpdateTx

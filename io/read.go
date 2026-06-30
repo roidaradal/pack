@@ -47,3 +47,15 @@ func ReadRawLines(path string) ([]string, error) {
 	}
 	return strings.Split(text, "\n"), nil
 }
+
+// ReadLines reads the lines of given path, and each line is trimmed for whitespace
+func ReadLines(path string) ([]string, error) {
+	lines, err := ReadRawLines(path)
+	if err != nil {
+		return nil, err
+	}
+	for i := range lines {
+		lines[i] = strings.TrimSpace(lines[i])
+	}
+	return lines, nil
+}
