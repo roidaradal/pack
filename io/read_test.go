@@ -7,3 +7,10 @@ func TestReadJSON(t *testing.T) {
 	// TODO: ReadJSONList
 	// TODO: ReadJSONMap
 }
+
+func TestReadFile(t *testing.T) {
+	// TODO: ReadFile
+	// TODO: ReadRawLines
+	// TODO: ReadLines
+	// TODO: ReadNonEmptyLines
+}

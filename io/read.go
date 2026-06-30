@@ -3,6 +3,7 @@ package io
 import (
 	"encoding/json"
 	"os"
+	"strings"
 )
 
 // ReadJSON reads a JSON object of given type from given path
@@ -27,4 +28,50 @@ func ReadJSONList[T any](path string) ([]T, error) {
 // ReadJSONMap reads a JSON map of given value type from given path
 func ReadJSONMap[V any](path string) (map[string]V, error) {
 	return ReadJSON[map[string]V](path)
+}
+
+// ReadFile reads the string contents of given path
+func ReadFile(path string) (string, error) {
+	bytes, err := os.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), nil
+}
+
+// ReadRawLines reads the lines of given path
+func ReadRawLines(path string) ([]string, error) {
+	text, err := ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	return strings.Split(text, "\n"), nil
+}
+
+// ReadLines reads the lines of given path, and each line is trimmed for whitespace
+func ReadLines(path string) ([]string, error) {
+	lines, err := ReadRawLines(path)
+	if err != nil {
+		return nil, err
+	}
+	for i := range lines {
+		lines[i] = strings.TrimSpace(lines[i])
+	}
+	return lines, nil
+}
+
+// ReadNonEmptyLines reads the non-empty lines of given path, and each non-empty line is trimeed for whitespace
+func ReadNonEmptyLines(path string) ([]string, error) {
+	rawLines, err := ReadRawLines(path)
+	if err != nil {
+		return nil, err
+	}
+	lines := make([]string, 0, len(rawLines))
+	for _, line := range rawLines {
+		line = strings.TrimSpace(line)
+		if line != "" {
+			lines = append(lines, line)
+		}
+	}
+	return lines, nil
 }
