@@ -1,6 +1,7 @@
 ## v0.3.36 - Read File Lines
   * Commit: 
   * io.ReadFile
+  * io.ReadRawLines
 ## v0.3.35 - Schema GetRowsAndUpdateTx 
   * Commit:2026-06-03 16:21
   * Schema GetRowsAndUpdateTx

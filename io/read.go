@@ -3,6 +3,7 @@ package io
 import (
 	"encoding/json"
 	"os"
+	"strings"
 )
 
 // ReadJSON reads a JSON object of given type from given path
@@ -36,4 +37,13 @@ func ReadFile(path string) (string, error) {
 		return "", err
 	}
 	return string(bytes), nil
+}
+
+// ReadRawLines reads the lines of given path
+func ReadRawLines(path string) ([]string, error) {
+	text, err := ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	return strings.Split(text, "\n"), nil
 }
