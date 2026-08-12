@@ -1,3 +1,6 @@
+## v0.3.37 - Hash Password
+  * Commit: 
+  * secrets.HashPassword
 ## v0.3.36 - Read File Lines
   * Commit: 2026-06-30 10:40
   * io.ReadFile
